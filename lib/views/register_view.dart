@@ -87,6 +87,8 @@ class _RegisterViewState extends State<RegisterView> {
                     email: email.text,
                     password: password.text,
                   );
+                  final user = FirebaseAuth.instance.currentUser;
+                  await user!.sendEmailVerification();
                 } on FirebaseAuthException catch (error) {
                   switch (error.code) {
                     case 'invalid-email':

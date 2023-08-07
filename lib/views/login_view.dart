@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projectx/views/forgot_password_view.dart';
 import 'package:projectx/views/register_view.dart';
+import 'package:projectx/views/verification_of_email.dart';
 import '../constants/constants.dart';
 
 class LoginView extends StatefulWidget {
@@ -85,6 +86,16 @@ class _LoginViewState extends State<LoginView> {
                 try {
                   await FirebaseAuth.instance.signInWithEmailAndPassword(
                       email: email.text, password: password.text);
+                  final user = FirebaseAuth.instance.currentUser;
+
+                  if (!user!.emailVerified) {
+                    await user.sendEmailVerification();
+                    // ignore: use_build_context_synchronously
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) {
+                      return const VerifieEmailView();
+                    }), (route) => false);
+                  }
                 } on FirebaseAuthException catch (error) {
                   switch (error.code) {
                     case 'user-not-found':
@@ -99,6 +110,8 @@ class _LoginViewState extends State<LoginView> {
                     default:
                       log('Authentication error');
                   }
+                } catch (error) {
+                  log('An error occured');
                 }
               },
               child: const Text(
