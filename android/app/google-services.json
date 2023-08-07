@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "769723259158",
+    "project_id": "proxieberlin7",
+    "storage_bucket": "proxieberlin7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769723259158:android:f7f14069ba3ea5565b9837",
+        "android_client_info": {
+          "package_name": "com.example.projectx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "769723259158-v21efirvi90ssckjvfduof5smgca4h6s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSXATCRNi8vuFmnlNAeOvkW73e8S9ExdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "769723259158-v21efirvi90ssckjvfduof5smgca4h6s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

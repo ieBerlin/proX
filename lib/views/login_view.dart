@@ -1,7 +1,8 @@
+import 'dart:developer';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projectx/views/forgot_password_view.dart';
 import 'package:projectx/views/register_view.dart';
-
 import '../constants/constants.dart';
 
 class LoginView extends StatefulWidget {
@@ -13,6 +14,24 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   bool isPressed = false;
+
+  late final TextEditingController email;
+  late final TextEditingController password;
+
+  @override
+  void initState() {
+    email = TextEditingController();
+    password = TextEditingController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,13 +47,15 @@ class _LoginViewState extends State<LoginView> {
       ),
       body: Column(
         children: [
-          const TextField(
+          TextField(
+            controller: email,
             decoration: InputDecoration(hintText: 'Enter your email'),
             autocorrect: false,
             enableSuggestions: false,
             keyboardType: TextInputType.emailAddress,
           ),
           TextField(
+            controller: password,
             decoration: InputDecoration(
                 hintText: 'Enter your password',
                 suffixIcon: IconButton(
@@ -60,7 +81,26 @@ class _LoginViewState extends State<LoginView> {
                 }
                 return Colors.blue;
               })),
-              onPressed: () {},
+              onPressed: () async {
+                try {
+                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: email.text, password: password.text);
+                } on FirebaseAuthException catch (error) {
+                  switch (error.code) {
+                    case 'user-not-found':
+                      log('User not found');
+                      break;
+                    case 'invalid-email':
+                      log('invalid-email');
+                      break;
+                    case 'wrong-password':
+                      log('wrong password');
+                      break;
+                    default:
+                      log('Authentication error');
+                  }
+                }
+              },
               child: const Text(
                 'Login',
                 style: TextStyle(color: Colors.white),

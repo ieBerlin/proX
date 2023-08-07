@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projectx/views/login_view.dart';
 
@@ -12,6 +15,23 @@ class RegisterView extends StatefulWidget {
 
 class _RegisterViewState extends State<RegisterView> {
   bool isPressed = false;
+  late final TextEditingController email;
+  late final TextEditingController password;
+
+  @override
+  void initState() {
+    email = TextEditingController();
+    password = TextEditingController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,13 +47,15 @@ class _RegisterViewState extends State<RegisterView> {
       ),
       body: Column(
         children: [
-          const TextField(
+          TextField(
+            controller: email,
             decoration: InputDecoration(hintText: 'Enter your email'),
             autocorrect: false,
             enableSuggestions: false,
             keyboardType: TextInputType.emailAddress,
           ),
           TextField(
+            controller: password,
             decoration: InputDecoration(
                 hintText: 'Enter your password',
                 suffixIcon: IconButton(
@@ -59,7 +81,33 @@ class _RegisterViewState extends State<RegisterView> {
                 }
                 return Colors.blue;
               })),
-              onPressed: () {},
+              onPressed: () async {
+                try {
+                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                    email: email.text,
+                    password: password.text,
+                  );
+                } on FirebaseAuthException catch (error) {
+                  switch (error.code) {
+                    case 'invalid-email':
+                      log('Invalid email ');
+                      break;
+                    case 'weak-password':
+                      log('Weak passowrd ');
+                      break;
+                    case 'email-already-in-use':
+                      log('email is already in use ');
+                      break;
+                    case 'missing-password':
+                      log('Missing password ');
+                      break;
+                    default:
+                      log('Authentication error');
+                  }
+                } catch (e) {
+                  log('Authentication error');
+                }
+              },
               child: const Text(
                 'Register',
                 style: TextStyle(color: Colors.white),
