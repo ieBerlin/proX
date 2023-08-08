@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/services/auth_service.dart';
 import 'package:projectx/utilities/dialog/show_error_dialog.dart';
-import 'package:projectx/views/login_view.dart';
-import 'package:projectx/views/reset_password_view.dart';
-
 import '../services/auth_exceptions.dart';
 
 class ForgotPasswordView extends StatefulWidget {
@@ -27,10 +25,10 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       appBar: AppBar(
         leading: IconButton(
             onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) {
-                return const LoginView();
-              }), (route) => false);
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                loginViewRoute,
+                (route) => false,
+              );
             },
             icon: const Icon(
               Icons.arrow_back,
@@ -65,10 +63,10 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                   await AuthService.firebase()
                       .forgotPassword(email: email.text);
                   // ignore: use_build_context_synchronously
-                  Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) {
-                    return const ResetPasswordView();
-                  }), (route) => false);
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    resetPasswordViewRoute,
+                    (route) => false,
+                  );
                 } on InvalidEmailException {
                   showErrorDialog(context: context, content: 'Invalid email');
                 } on UserNotFoundException {

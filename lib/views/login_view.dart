@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/services/auth_service.dart';
 import 'package:projectx/utilities/dialog/show_error_dialog.dart';
-import 'package:projectx/views/forgot_password_view.dart';
-import 'package:projectx/views/home_page.dart';
-import 'package:projectx/views/register_view.dart';
-import 'package:projectx/views/verification_of_email.dart';
-import '../constants/constants.dart';
+import '../constants/icons/constants.dart';
 import '../services/auth_exceptions.dart';
 
 class LoginView extends StatefulWidget {
@@ -96,16 +93,16 @@ class _LoginViewState extends State<LoginView> {
                   if (!user!.isEmailVerified) {
                     await AuthService.firebase().sendEmailVerification();
                     // ignore: use_build_context_synchronously
-                    Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) {
-                      return const VerifieEmailView();
-                    }), (route) => false);
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      verificationEmailViewRoute,
+                      (route) => false,
+                    );
                   } else {
                     // ignore: use_build_context_synchronously
-                    Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) {
-                      return const HomePage();
-                    }), (route) => false);
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      homePageViewRoute,
+                      (route) => false,
+                    );
                   }
                 } on InvalidEmailException {
                   await showErrorDialog(
@@ -141,10 +138,10 @@ class _LoginViewState extends State<LoginView> {
           ),
           TextButton(
               onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) {
-                  return const RegisterView();
-                }), (context) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  registerViewRoute,
+                  (context) => false,
+                );
               },
               child: const Text('Don\'t have an account ?, create one !')),
           const SizedBox(
@@ -152,10 +149,10 @@ class _LoginViewState extends State<LoginView> {
           ),
           TextButton(
               onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) {
-                  return const ForgotPasswordView();
-                }), (context) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  forgotPasswordViewRoute,
+                  (context) => false,
+                );
               },
               child: const Text(
                 'Forgot you password ?',

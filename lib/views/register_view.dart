@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/services/auth_service.dart';
-import 'package:projectx/views/login_view.dart';
-import 'package:projectx/views/verification_of_email.dart';
-import '../constants/constants.dart';
+import '../constants/icons/constants.dart';
 import '../services/auth_exceptions.dart';
 import '../utilities/dialog/show_error_dialog.dart';
 
@@ -90,10 +89,10 @@ class _RegisterViewState extends State<RegisterView> {
                   );
 
                   await AuthService.firebase().sendEmailVerification();
-                  Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) {
-                    return const VerifieEmailView();
-                  }), (route) => false);
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    verificationEmailViewRoute,
+                    (route) => false,
+                  );
                 } on InvalidEmailException {
                   await showErrorDialog(
                       context: context, content: 'Invalid email');
@@ -125,10 +124,10 @@ class _RegisterViewState extends State<RegisterView> {
           ),
           TextButton(
               onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) {
-                  return const LoginView();
-                }), (context) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  loginViewRoute,
+                  (context) => false,
+                );
               },
               child: const Text('Already have an account, login !'))
         ],

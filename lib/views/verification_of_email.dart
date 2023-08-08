@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:projectx/views/login_view.dart';
+import 'package:projectx/constants/routes/routes.dart';
 
 class VerifieEmailView extends StatefulWidget {
   const VerifieEmailView({super.key});
@@ -43,10 +43,7 @@ class _VerifieEmailViewState extends State<VerifieEmailView> {
             TextButton(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
-                  Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (context) {
-                    return const LoginView();
-                  }));
+                  Navigator.of(context).pushNamed(loginViewRoute);
                 },
                 child: const Text('Back to login page'))
           ],

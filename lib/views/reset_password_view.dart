@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'login_view.dart';
+import 'package:projectx/constants/routes/routes.dart';
 
 class ResetPasswordView extends StatefulWidget {
   const ResetPasswordView({super.key});
@@ -33,10 +32,10 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
               ),
               TextButton(
                   onPressed: () {
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (context) {
-                      return const LoginView();
-                    }));
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      loginViewRoute,
+                      (context) => false,
+                    );
                   },
                   child: const Text('Back to login page'))
             ],

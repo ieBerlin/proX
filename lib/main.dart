@@ -1,8 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/services/auth_service.dart';
-import 'package:projectx/views/home_page.dart';
+import 'package:projectx/views/forgot_password_view.dart';
+import 'package:projectx/views/home_page_view.dart';
 import 'package:projectx/views/login_view.dart';
+import 'package:projectx/views/register_view.dart';
+import 'package:projectx/views/reset_password_view.dart';
 import 'package:projectx/views/verification_of_email.dart';
 
 void main() {
@@ -15,8 +19,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Oriented(),
+    return MaterialApp(
+      routes: {
+        loginViewRoute: (context) => const LoginView(),
+        registerViewRoute: (context) => const RegisterView(),
+        forgotPasswordViewRoute: (context) => const ForgotPasswordView(),
+        resetPasswordViewRoute: (context) => const ResetPasswordView(),
+        homePageViewRoute: (context) => const HomePage(),
+        verificationEmailViewRoute: (context) => const VerifieEmailView(),
+      },
+      home: const Oriented(),
     );
   }
 }
