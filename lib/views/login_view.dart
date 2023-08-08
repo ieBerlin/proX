@@ -1,7 +1,10 @@
 import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:projectx/services/auth_service.dart';
 import 'package:projectx/views/forgot_password_view.dart';
+import 'package:projectx/views/home_page.dart';
 import 'package:projectx/views/register_view.dart';
 import 'package:projectx/views/verification_of_email.dart';
 import '../constants/constants.dart';
@@ -50,7 +53,7 @@ class _LoginViewState extends State<LoginView> {
         children: [
           TextField(
             controller: email,
-            decoration: InputDecoration(hintText: 'Enter your email'),
+            decoration: const InputDecoration(hintText: 'Enter your email'),
             autocorrect: false,
             enableSuggestions: false,
             keyboardType: TextInputType.emailAddress,
@@ -83,35 +86,30 @@ class _LoginViewState extends State<LoginView> {
                 return Colors.blue;
               })),
               onPressed: () async {
+                // officielkaytout8@gmail.com
                 try {
-                  await FirebaseAuth.instance.signInWithEmailAndPassword(
-                      email: email.text, password: password.text);
-                  final user = FirebaseAuth.instance.currentUser;
+                  await AuthService.firebase().logIn(
+                    email: email.text,
+                    password: password.text,
+                  );
+                  final user = AuthService.firebase().currentUser;
 
-                  if (!user!.emailVerified) {
-                    await user.sendEmailVerification();
-                    // ignore: use_build_context_synchronously
+                  if (!user!.isEmailVerified) {
+                    await AuthService.firebase().sendEmailVerification();
                     Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (context) {
                       return const VerifieEmailView();
                     }), (route) => false);
+                  } else {
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) {
+                      return const HomePage();
+                    }), (route) => false);
                   }
-                } on FirebaseAuthException catch (error) {
-                  switch (error.code) {
-                    case 'user-not-found':
-                      log('User not found');
-                      break;
-                    case 'invalid-email':
-                      log('invalid-email');
-                      break;
-                    case 'wrong-password':
-                      log('wrong password');
-                      break;
-                    default:
-                      log('Authentication error');
-                  }
-                } catch (error) {
-                  log('An error occured');
+                } on FirebaseAuthException catch (exception) {
+                  log(exception.toString());
+                } catch (exception) {
+                  log(exception.toString());
                 }
               },
               child: const Text(

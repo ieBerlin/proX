@@ -2,8 +2,9 @@ import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:projectx/services/auth_service.dart';
 import 'package:projectx/views/login_view.dart';
-
+import 'package:projectx/views/verification_of_email.dart';
 import '../constants/constants.dart';
 
 class RegisterView extends StatefulWidget {
@@ -49,7 +50,7 @@ class _RegisterViewState extends State<RegisterView> {
         children: [
           TextField(
             controller: email,
-            decoration: InputDecoration(hintText: 'Enter your email'),
+            decoration: const InputDecoration(hintText: 'Enter your email'),
             autocorrect: false,
             enableSuggestions: false,
             keyboardType: TextInputType.emailAddress,
@@ -80,35 +81,43 @@ class _RegisterViewState extends State<RegisterView> {
                   return Colors.amber;
                 }
                 return Colors.blue;
+                // return Colors.blue;officielkaytout8@gmail.com
               })),
               onPressed: () async {
                 try {
-                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                  await AuthService.firebase().createUser(
                     email: email.text,
                     password: password.text,
                   );
-                  final user = FirebaseAuth.instance.currentUser;
-                  await user!.sendEmailVerification();
+
+                  await AuthService.firebase().sendEmailVerification();
+                  Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) {
+                    return const VerifieEmailView();
+                  }), (route) => false);
                 } on FirebaseAuthException catch (error) {
                   switch (error.code) {
                     case 'invalid-email':
-                      log('Invalid email ');
-                      break;
+                    // throw InvalidEmailException();
                     case 'weak-password':
-                      log('Weak passowrd ');
-                      break;
+                    // throw WeakPasswordException();
                     case 'email-already-in-use':
-                      log('email is already in use ');
-                      break;
+                    // throw EmailAlreadyInUseException();
                     case 'missing-password':
-                      log('Missing password ');
-                      break;
+                    // throw MissingPasswordException();
                     default:
-                      log('Authentication error');
+                      log('error happend');
+                    // throw GenericException();
                   }
-                } catch (e) {
-                  log('Authentication error');
+                } catch (error) {
+                  log('error happend');
+                  // throw GenericException();
                 }
+                //   await AuthService.firebase().sendEmailVerification();
+                // Navigator.of(context).pushAndRemoveUntil(
+                //     MaterialPageRoute(builder: (context) {
+                //   return const VerifieEmailView();
+                // }), (route) => false);
               },
               child: const Text(
                 'Register',
