@@ -1,4 +1,4 @@
-import 'package:projectx/services/auth_user.dart';
+import 'package:projectx/services/auth/auth_user.dart';
 
 abstract class AuthProvider {
   Future<AuthUser?> createUser(

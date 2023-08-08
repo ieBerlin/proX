@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projectx/constants/routes/routes.dart';
-import 'package:projectx/services/auth_service.dart';
+import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/views/forgot_password_view.dart';
 import 'package:projectx/views/home_page_view.dart';
 import 'package:projectx/views/login_view.dart';
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         homePageViewRoute: (context) => const HomePage(),
         verificationEmailViewRoute: (context) => const VerifieEmailView(),
       },
-      home: const Oriented(),
+      home: const HomePage(),
     );
   }
 }
