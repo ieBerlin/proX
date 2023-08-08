@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:projectx/services/crud/note_services.dart';
+import 'package:projectx/services/auth/auth_exceptions.dart';
+import 'package:projectx/services/crud/services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,19 +11,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final NoteServices noteServices;
-  late final TextEditingController email;
+  late final Services _services;
+  late final TextEditingController _email;
   @override
   void initState() {
-    email = TextEditingController();
-    noteServices = NoteServices();
+    _email = TextEditingController();
+    _services = Services();
     super.initState();
   }
 
   @override
   void dispose() {
-    noteServices.close();
-    email.dispose();
+    _services.close();
+    _email.dispose();
     super.dispose();
   }
 
@@ -33,15 +34,23 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           TextField(
-            controller: email,
+            controller: _email,
             decoration: const InputDecoration(hintText: 'Enter email'),
           ),
           TextButton(
               onPressed: () async {
-                log(email.text);
-                final state =
-                    await noteServices.getOrCreateUser(email: email.text);
-                log(state.toString());
+                try {
+                  final user =
+                      await _services.getOrCreateUser(email: _email.text);
+                  log('------------');
+                  log(user.id.toString());
+                  log(user.email.toString());
+                  log('------------');
+                } on GenericException catch (e) {
+                  log('error :( $e');
+                } catch (e) {
+                  log('error :( $e');
+                }
               },
               child: const Text('Create user'))
         ],
@@ -49,3 +58,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+/*try {
+                  final user = await _services.createAnUser(email: email.text);
+                  log(user.toString());
+                  log('user has been created');
+                } on UserAlreadyExistsBerlin catch (e) {
+                  log('user already exists');
+                } on DatabaseIsntOpenedCrudBerlin catch (e) {
+                  log('An error occured while opening db');
+                } on GenericExption12 catch (e) {
+                  log('an error occured' + '$e');
+                } catch (e) {
+                  log('an error occured');
+                } */
