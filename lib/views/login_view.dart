@@ -1,13 +1,12 @@
-import 'dart:developer';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projectx/services/auth_service.dart';
+import 'package:projectx/utilities/dialog/show_error_dialog.dart';
 import 'package:projectx/views/forgot_password_view.dart';
 import 'package:projectx/views/home_page.dart';
 import 'package:projectx/views/register_view.dart';
 import 'package:projectx/views/verification_of_email.dart';
 import '../constants/constants.dart';
+import '../services/auth_exceptions.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -96,20 +95,41 @@ class _LoginViewState extends State<LoginView> {
 
                   if (!user!.isEmailVerified) {
                     await AuthService.firebase().sendEmailVerification();
+                    // ignore: use_build_context_synchronously
                     Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (context) {
                       return const VerifieEmailView();
                     }), (route) => false);
                   } else {
+                    // ignore: use_build_context_synchronously
                     Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (context) {
                       return const HomePage();
                     }), (route) => false);
                   }
-                } on FirebaseAuthException catch (exception) {
-                  log(exception.toString());
+                } on InvalidEmailException {
+                  await showErrorDialog(
+                      context: context, content: 'Invalid email');
+                } on WrongPasswordException {
+                  await showErrorDialog(
+                      context: context, content: 'Wrong password');
+                } on MissingPasswordException {
+                  await showErrorDialog(
+                      context: context, content: 'Missing password');
+                } on WeakPasswordException {
+                  await showErrorDialog(
+                      context: context, content: 'Weak password');
+                } on UserNotFoundException {
+                  await showErrorDialog(
+                      context: context, content: 'User not found');
+                } on GenericException {
+                  await showErrorDialog(
+                      context: context,
+                      content: 'An error occured while authentication');
                 } catch (exception) {
-                  log(exception.toString());
+                  await showErrorDialog(
+                      context: context,
+                      content: 'An error occured while authentication');
                 }
               },
               child: const Text(

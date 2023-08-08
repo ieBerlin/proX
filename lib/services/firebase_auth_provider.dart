@@ -56,6 +56,8 @@ class FirebaseAuthProvider implements AuthProvider {
       }
     } on FirebaseAuthException catch (error) {
       switch (error.code) {
+        case 'user-not-found':
+          throw UserNotFoundException();
         case 'invalid-email':
           throw InvalidEmailException();
         case 'weak-password':
@@ -86,8 +88,12 @@ class FirebaseAuthProvider implements AuthProvider {
   Future<void> forgotPassword({required String email}) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (exceptions) {
-      switch (exceptions.code) {
+    } on FirebaseAuthException catch (exception) {
+      switch (exception.code) {
+        case 'invalid-email':
+          throw InvalidEmailException();
+        case 'user-not-found':
+          throw UserNotFoundException();
         default:
           throw GenericException();
       }

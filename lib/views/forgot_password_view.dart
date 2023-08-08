@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/services/auth_service.dart';
+import 'package:projectx/utilities/dialog/show_error_dialog.dart';
 import 'package:projectx/views/login_view.dart';
+import 'package:projectx/views/reset_password_view.dart';
+
+import '../services/auth_exceptions.dart';
 
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key});
@@ -9,6 +14,13 @@ class ForgotPasswordView extends StatefulWidget {
 }
 
 class _ForgotPasswordViewState extends State<ForgotPasswordView> {
+  late final TextEditingController email;
+  @override
+  initState() {
+    email = TextEditingController();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,8 +45,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       ),
       body: Column(
         children: [
-          const TextField(
-            decoration: InputDecoration(hintText: 'Enter you emails'),
+          TextField(
+            controller: email,
+            decoration: const InputDecoration(hintText: 'Enter you email'),
           ),
           const SizedBox(
             height: 20,
@@ -47,7 +60,25 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                 }
                 return Colors.blue;
               })),
-              onPressed: () {},
+              onPressed: () async {
+                try {
+                  await AuthService.firebase()
+                      .forgotPassword(email: email.text);
+                  // ignore: use_build_context_synchronously
+                  Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) {
+                    return const ResetPasswordView();
+                  }), (route) => false);
+                } on InvalidEmailException {
+                  showErrorDialog(context: context, content: 'Invalid email');
+                } on UserNotFoundException {
+                  showErrorDialog(context: context, content: 'User not found');
+                } on GenericException {
+                  showErrorDialog(
+                      context: context,
+                      content: 'Can\'t send email verification!');
+                }
+              },
               child: const Text(
                 'Reset your password',
                 style: TextStyle(color: Colors.white),

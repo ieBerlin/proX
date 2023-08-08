@@ -1,11 +1,10 @@
-import 'dart:developer';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projectx/services/auth_service.dart';
 import 'package:projectx/views/login_view.dart';
 import 'package:projectx/views/verification_of_email.dart';
 import '../constants/constants.dart';
+import '../services/auth_exceptions.dart';
+import '../utilities/dialog/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -95,29 +94,27 @@ class _RegisterViewState extends State<RegisterView> {
                       MaterialPageRoute(builder: (context) {
                     return const VerifieEmailView();
                   }), (route) => false);
-                } on FirebaseAuthException catch (error) {
-                  switch (error.code) {
-                    case 'invalid-email':
-                    // throw InvalidEmailException();
-                    case 'weak-password':
-                    // throw WeakPasswordException();
-                    case 'email-already-in-use':
-                    // throw EmailAlreadyInUseException();
-                    case 'missing-password':
-                    // throw MissingPasswordException();
-                    default:
-                      log('error happend');
-                    // throw GenericException();
-                  }
-                } catch (error) {
-                  log('error happend');
-                  // throw GenericException();
+                } on InvalidEmailException {
+                  await showErrorDialog(
+                      context: context, content: 'Invalid email');
+                } on MissingPasswordException {
+                  await showErrorDialog(
+                      context: context, content: 'Missing password');
+                } on WeakPasswordException {
+                  await showErrorDialog(
+                      context: context, content: 'Weak password');
+                } on EmailAlreadyInUseException {
+                  await showErrorDialog(
+                      context: context, content: 'Email is already in use');
+                } on GenericException {
+                  await showErrorDialog(
+                      context: context,
+                      content: 'An error occured while authentication');
+                } catch (exception) {
+                  await showErrorDialog(
+                      context: context,
+                      content: 'An error occured while authentication');
                 }
-                //   await AuthService.firebase().sendEmailVerification();
-                // Navigator.of(context).pushAndRemoveUntil(
-                //     MaterialPageRoute(builder: (context) {
-                //   return const VerifieEmailView();
-                // }), (route) => false);
               },
               child: const Text(
                 'Register',
