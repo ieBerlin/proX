@@ -1,6 +1,4 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:projectx/services/auth/auth_exceptions.dart';
 import 'package:projectx/services/crud/services.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,19 +35,7 @@ class _HomePageState extends State<HomePage> {
             controller: _email,
             decoration: const InputDecoration(hintText: 'Enter email'),
           ),
-          TextButton(
-              onPressed: () async {
-                try {
-                  final user = await _services.getUser(email: _email.text);
-                  final notes = await _services.getAllNotes(id: user.id);
-                  log(notes.toString());
-                } on GenericException catch (e) {
-                  log('error :( $e');
-                } catch (e) {
-                  log('error :( $e');
-                }
-              },
-              child: const Text('Create user'))
+          TextButton(onPressed: () async {}, child: const Text('Create user'))
         ],
       ),
     );

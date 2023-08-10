@@ -16,4 +16,14 @@ class CouldNotFindTheNote implements Exception {}
 
 class CouldNotFineTheUser implements Exception {}
 
+class CouldNotUpdateNote implements Exception {}
+
 class CouldNotFindTheAtLeastOneNote implements Exception {}
+
+class CouldNotDeleteNote implements Exception {}
+
+class CouldNotDeleteAllNotesOfAllUsers implements Exception {}
+
+class CouldNotDeleteAllNotesOfProvidedEmailUser implements Exception {}
+
+class CouldNotDeleteUser implements Exception {}

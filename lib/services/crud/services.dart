@@ -47,10 +47,12 @@ class Services {
   }
 
   Future<void> close() async {
-    if (_db == null) {
+    final db = _db;
+    if (db == null) {
       throw DatabaseIsAlreadyClosedException();
     } else {
-      _db!.close();
+      db.close();
+      _db = null;
     }
   }
 
@@ -140,6 +142,92 @@ class Services {
     );
   }
 
+  Future<void> deleteNote({required int noteId}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final result = await db.delete(
+      noteTable,
+      where: 'noteId = ?',
+      whereArgs: [noteId],
+    );
+    if (result == 0) {
+      throw CouldNotDeleteNote();
+    } else {
+      log('Note has been deleted successefully');
+    }
+  }
+
+  Future<void> deleteAllNoteOfProviderUser({required String email}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final user = await getUser(email: email);
+    final result = await db.delete(
+      noteTable,
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+    if (result == 0) {
+      throw CouldNotDeleteAllNotesOfProvidedEmailUser();
+    } else {
+      log('All notes of provided user, have been deleted successefully');
+    }
+  }
+
+  Future<void> deleteAllNoteOfAllUsers() async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final result = await db.delete(noteTable);
+    if (result == 0) {
+      throw CouldNotDeleteAllNotesOfAllUsers();
+    } else {
+      log('All notes have been deleted successefully');
+    }
+  }
+
+  Future<NoteDB> updateNote({
+    required int noteId,
+    required String title,
+    required String content,
+    required NoteImportance importance,
+  }) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+
+    await getNote(noteId: noteId);
+    final note = await db.update(
+      noteTable,
+      {
+        titleColumn: title,
+        contentColumn: content,
+        importanceColumn: enumToString(importance),
+      },
+      where: 'noteId = ?',
+      whereArgs: [noteId],
+    );
+    if (note == 0) {
+      throw CouldNotUpdateNote();
+    } else {
+      final updatedNote = await getNote(noteId: noteId);
+      return updatedNote;
+    }
+  }
+
+  Future<List<NoteDB>> getAllNotesOfAllUsers() async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    List<NoteDB> returnedNotes = [];
+    final notes = await db.query(noteTable);
+    if (notes.isEmpty) {
+      throw CouldNotFindTheAtLeastOneNote();
+    } else {
+      for (final i in notes) {
+        returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
+      }
+      log(returnedNotes.toString());
+    }
+    return returnedNotes;
+  }
+
   Future<List<NoteDB>> getAllNotes({required int id}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
@@ -157,19 +245,20 @@ class Services {
     return returnedNotes;
   }
 
-  Future<NoteDB> getNote({required int id}) async {
+  Future<NoteDB> getNote({required int noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final note = await db.query(
       noteTable,
       limit: 1,
       where: 'noteId = ?',
-      whereArgs: [id],
+      whereArgs: [noteId],
     );
     if (note.isEmpty) {
       throw CouldNotFindTheNote();
     } else {
-      return NoteDB.fromRow(note.first);
+      final fetchedNote = note[0];
+      return covertingQueryRowToANoteDbObject(fetchedNote.values.toList());
     }
   }
 
@@ -201,6 +290,19 @@ class Services {
     } catch (e) {
       log('Generic exception');
       throw GenericException();
+    }
+  }
+
+  Future<void> deleteUser({required String email}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final deletedCount = await db.delete(
+      userTable,
+      where: 'email = ?',
+      whereArgs: [email.toLowerCase()],
+    );
+    if (deletedCount != 1) {
+      throw CouldNotDeleteUser();
     }
   }
 }
