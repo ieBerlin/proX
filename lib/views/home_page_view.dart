@@ -40,12 +40,9 @@ class _HomePageState extends State<HomePage> {
           TextButton(
               onPressed: () async {
                 try {
-                  final user =
-                      await _services.getOrCreateUser(email: _email.text);
-                  log('------------');
-                  log(user.id.toString());
-                  log(user.email.toString());
-                  log('------------');
+                  final user = await _services.getUser(email: _email.text);
+                  final notes = await _services.getAllNotes(id: user.id);
+                  log(notes.toString());
                 } on GenericException catch (e) {
                   log('error :( $e');
                 } catch (e) {

@@ -1,11 +1,15 @@
 import 'dart:developer';
 import 'package:path_provider/path_provider.dart';
+import 'package:projectx/constants/db_constants/constants.dart';
 import 'package:projectx/services/auth/auth_exceptions.dart';
 import 'package:sqflite/sqflite.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path/path.dart' show join;
 
+import '../../enums/enums.dart';
 import 'crud_exceptions.dart';
+import 'user_notes_databases/notedb.dart';
+import 'user_notes_databases/userdb.dart';
 
 class Services {
   Database? _db;
@@ -24,6 +28,7 @@ class Services {
       final db = await openDatabase(path);
       _db = db;
       await db.execute(createUserTableSql);
+      await db.execute(createNoteTableSql);
     } catch (e) {
       throw GenericExceptionExceptionForCRUD();
     }
@@ -33,11 +38,11 @@ class Services {
     try {
       await openDb();
     } on DatabaseIsAlreadyOpenedException {
-      log('Db is already opened');
+      log('The Database is already opened, continue');
     } on GenericExceptionExceptionForCRUD catch (e) {
-      log('Generic exception $e');
+      log('An error occured while opening the database : $e');
     } catch (e) {
-      log('Generic exception $e');
+      log('An error occured while opening the database : $e');
     }
   }
 
@@ -52,6 +57,7 @@ class Services {
   Database getDbOrThrow() {
     final db = _db;
     if (db == null) {
+      log('Could not load the database because it\'s not opened');
       throw DatabaseIsntOpenedExceptionForCRUD();
     } else {
       return db;
@@ -106,6 +112,67 @@ class Services {
     }
   }
 
+  Future<NoteDB> createNote({
+    required String title,
+    required String content,
+    required NoteImportance importance,
+    required UserDB owner,
+  }) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final user = await getUser(email: owner.email);
+    if (user != owner) {
+      throw CouldNotFineTheUser();
+    }
+
+    final noteId = await db.insert(noteTable, {
+      idColumn: owner.id,
+      titleColumn: title,
+      contentColumn: content,
+      importanceColumn: enumToString(importance),
+    });
+    return NoteDB(
+      noteId: noteId,
+      id: owner.id,
+      title: title,
+      content: content,
+      importance: importance,
+    );
+  }
+
+  Future<List<NoteDB>> getAllNotes({required int id}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    List<NoteDB> returnedNotes = [];
+    final notes = await db.query(noteTable, where: 'id = ?', whereArgs: [id]);
+    if (notes.isEmpty) {
+      ////
+      throw CouldNotFindTheAtLeastOneNote();
+    } else {
+      for (final i in notes) {
+        returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
+      }
+      log(returnedNotes.toString());
+    }
+    return returnedNotes;
+  }
+
+  Future<NoteDB> getNote({required int id}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final note = await db.query(
+      noteTable,
+      limit: 1,
+      where: 'noteId = ?',
+      whereArgs: [id],
+    );
+    if (note.isEmpty) {
+      throw CouldNotFindTheNote();
+    } else {
+      return NoteDB.fromRow(note.first);
+    }
+  }
+
   Future<UserDB> createAnUser({required String email}) async {
     await ensureOpeningDb();
     try {
@@ -137,43 +204,3 @@ class Services {
     }
   }
 }
-
-class UserDB {
-  final int id;
-  final String email;
-  const UserDB({
-    required this.id,
-    required this.email,
-  });
-  UserDB.fromRow(Map<String, Object?> map)
-      : id = map[idColumn] as int,
-        email = map[emailColumn] as String;
-}
-
-//constants :
-
-const idColumn = 'id';
-const emailColumn = 'email';
-const databaseName = 'dbname.db';
-const userTable = 'user';
-const createUserTableSql = '''
-CREATE TABLE IF NOT EXISTS "user" (
-	"id"	INTEGER NOT NULL,
-	"email"	TEXT NOT NULL ,
-	PRIMARY KEY("id" AUTOINCREMENT)
-);
-''';
-
-//exceptions
-
-class DatabaseIsntOpenedCrudBerlin implements Exception {}
-
-class ProblemOccuredException implements Exception {}
-
-class DatabaseIsOpenedException implements Exception {}
-
-class UserAlreadyExistsBerlin implements Exception {}
-
-class DatabaseIsAlreadyClosedException implements Exception {}
-
-class GenericExption12 implements Exception {}
