@@ -1,56 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:projectx/services/crud/services.dart';
+import 'package:projectx/views/list_view.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class NotesView extends StatefulWidget {
+  const NotesView({Key? key}) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _NotesViewState createState() => _NotesViewState();
 }
 
-class _HomePageState extends State<HomePage> {
-  late final Services _services;
-  late final TextEditingController _email;
+class _NotesViewState extends State<NotesView> {
   @override
   void initState() {
-    _email = TextEditingController();
-    _services = Services();
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    _services.close();
-    _email.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextField(
-            controller: _email,
-            decoration: const InputDecoration(hintText: 'Enter email'),
+        appBar: AppBar(
+          backgroundColor: Colors.blue,
+          title: const Text(
+            'Your Notes',
+            style: TextStyle(color: Colors.white),
           ),
-          TextButton(onPressed: () async {}, child: const Text('Create user'))
-        ],
-      ),
-    );
+          actions: [
+            IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: ((context) => const noteListView())));
+                },
+                icon: const Icon(Icons.add))
+          ],
+        ),
+        body: const CircularProgressIndicator());
   }
 }
-/*try {
-                  final user = await _services.createAnUser(email: email.text);
-                  log(user.toString());
-                  log('user has been created');
-                } on UserAlreadyExistsBerlin catch (e) {
-                  log('user already exists');
-                } on DatabaseIsntOpenedCrudBerlin catch (e) {
-                  log('An error occured while opening db');
-                } on GenericExption12 catch (e) {
-                  log('an error occured' + '$e');
-                } catch (e) {
-                  log('an error occured');
-                } */

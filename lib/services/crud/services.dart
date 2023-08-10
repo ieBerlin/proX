@@ -123,9 +123,9 @@ class Services {
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final user = await getUser(email: owner.email);
-    if (user != owner) {
-      throw CouldNotFineTheUser();
-    }
+    // if (user != owner) {
+    //   throw CouldNotFineTheUser();
+    // }
 
     final noteId = await db.insert(noteTable, {
       idColumn: owner.id,
