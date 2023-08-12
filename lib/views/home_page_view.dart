@@ -1,10 +1,7 @@
-import 'dart:developer';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/services/auth/auth_service.dart';
-import 'package:projectx/services/crud/crud_exceptions.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
 import 'package:projectx/views/create_or_update_note.dart';

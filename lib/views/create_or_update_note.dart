@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
@@ -36,7 +35,7 @@ class noteListView extends StatefulWidget {
 class _noteListViewState extends State<noteListView> {
   String? title;
   String? content;
-  NoteImportance _noteImportance = NoteImportance.red;
+  late NoteImportance _noteImportance;
 
   NoteDB? _note;
   final Services _services = Services();
@@ -48,6 +47,7 @@ class _noteListViewState extends State<noteListView> {
   Future<NoteDB> createOrGetExsitingNote(BuildContext context) async {
     final existingNote = _note;
     if (existingNote != null) {
+      log('updated note');
       return existingNote;
     } else {
       final currentUser = AuthService.firebase().currentUser;
@@ -60,14 +60,10 @@ class _noteListViewState extends State<noteListView> {
         owner: owner,
       );
       _note = newNote;
+      log(_note.toString());
       log('note has been created ');
       return newNote;
     }
-
-    // if (_titleController.text.isNotEmpty && _bodyController.text.isNotEmpty) {
-
-    // }
-    // return null;
   }
 
   void _deleteNoteIfTextEmpty() {
@@ -113,6 +109,11 @@ class _noteListViewState extends State<noteListView> {
       content: content,
       importance: importance,
     );
+    log('updated note');
+  }
+
+  void _setupImportanceControllerListener() {
+    log('_setupImportanceControllerListener');
   }
 
   void _setupTitleControllerListener() {
@@ -139,6 +140,7 @@ class _noteListViewState extends State<noteListView> {
 
   @override
   void initState() {
+    _noteImportance = NoteImportance.red;
     _titleController = TextEditingController();
     _bodyController = TextEditingController();
     super.initState();
@@ -148,6 +150,8 @@ class _noteListViewState extends State<noteListView> {
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
+    _deleteNoteIfTextEmpty();
+    _saveNoteIfTextNotEmpty();
     super.dispose();
   }
 
@@ -197,6 +201,7 @@ class _noteListViewState extends State<noteListView> {
                           InkWell(
                               onTap: () {
                                 _noteImportance = NoteImportance.red;
+                                print(_noteImportance);
                                 _index = 1;
                               },
                               child: _index == 1
@@ -232,6 +237,8 @@ class _noteListViewState extends State<noteListView> {
                           InkWell(
                               onTap: () {
                                 _noteImportance = NoteImportance.orange;
+                                print(_noteImportance);
+
                                 _index = 2;
                               },
                               child: _index == 2
@@ -267,6 +274,8 @@ class _noteListViewState extends State<noteListView> {
                           InkWell(
                               onTap: () {
                                 _noteImportance = NoteImportance.yellow;
+                                print(_noteImportance);
+
                                 _index = 3;
                               },
                               child: _index == 3
@@ -302,6 +311,8 @@ class _noteListViewState extends State<noteListView> {
                           InkWell(
                               onTap: () {
                                 _noteImportance = NoteImportance.green;
+                                print(_noteImportance);
+
                                 _index = 4;
                               },
                               child: _index == 4
@@ -339,18 +350,5 @@ class _noteListViewState extends State<noteListView> {
                   return const CircularProgressIndicator();
               }
             }));
-  }
-}
-
-extension GetArgument on BuildContext {
-  T? getArguments<T>() {
-    final modelRoute = ModalRoute.of(this);
-    if (modelRoute != null) {
-      final args = modelRoute.settings.arguments;
-      if (args != null && args is T) {
-        return args as T;
-      }
-    }
-    return null;
   }
 }

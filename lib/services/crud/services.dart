@@ -30,7 +30,6 @@ class Services {
   Stream<List<NoteDB>> get allNotes =>
       _notesStreamController.stream.filter((note) {
         final currentUser = _user;
-        print('this is user : $currentUser');
         if (currentUser != null) {
           log(currentUser.toString());
           return note.id == currentUser.id;
