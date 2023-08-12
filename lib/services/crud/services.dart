@@ -1,22 +1,52 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/constants/db_constants/constants.dart';
+import 'package:projectx/extentions/list/filter.dart';
 import 'package:projectx/services/auth/auth_exceptions.dart';
+import 'package:projectx/services/auth/auth_service.dart';
 import 'package:sqflite/sqflite.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path/path.dart' show join;
-
 import '../../enums/enums.dart';
 import 'crud_exceptions.dart';
 import 'user_notes_databases/notedb.dart';
 import 'user_notes_databases/userdb.dart';
 
-class Services {
-  Database? _db;
+class UserShouldBeSetBeforeReadingAllNotes implements Exception {}
 
+class Services {
   static final Services _shared = Services._sharedInstance();
-  Services._sharedInstance();
   factory Services() => _shared;
+  Database? _db;
+  List<NoteDB> _notes = [];
+  UserDB? _user;
+  Services._sharedInstance() {
+    _notesStreamController =
+        StreamController<List<NoteDB>>.broadcast(onListen: () {
+      _notesStreamController.sink.add(_notes);
+    });
+  }
+  Stream<List<NoteDB>> get allNotes =>
+      _notesStreamController.stream.filter((note) {
+        final currentUser = _user;
+        print('this is user : $currentUser');
+        if (currentUser != null) {
+          log(currentUser.toString());
+          return note.id == currentUser.id;
+        } else {
+          throw UserShouldBeSetBeforeReadingAllNotes();
+        }
+      });
+
+  String get email => AuthService.firebase().currentUser!.email;
+  late final StreamController<List<NoteDB>> _notesStreamController;
+
+  Future<void> _cacheNotes() async {
+    final allNote = await getAllNotesOfAllUsers();
+    _notes = allNote.toList();
+    _notesStreamController.add(_notes);
+  }
 
   Future<void> openDb() async {
     if (_db != null) {
@@ -29,6 +59,7 @@ class Services {
       _db = db;
       await db.execute(createUserTableSql);
       await db.execute(createNoteTableSql);
+      await _cacheNotes();
     } catch (e) {
       throw GenericExceptionExceptionForCRUD();
     }
@@ -38,11 +69,11 @@ class Services {
     try {
       await openDb();
     } on DatabaseIsAlreadyOpenedException {
-      log('The Database is already opened, continue');
+      ('The Database is already opened, continue');
     } on GenericExceptionExceptionForCRUD catch (e) {
-      log('An error occured while opening the database : $e');
+      ('An error occured while opening the database : $e');
     } catch (e) {
-      log('An error occured while opening the database : $e');
+      ('An error occured while opening the database : $e');
     }
   }
 
@@ -59,7 +90,7 @@ class Services {
   Database getDbOrThrow() {
     final db = _db;
     if (db == null) {
-      log('Could not load the database because it\'s not opened');
+      ('Could not load the database because it\'s not opened');
       throw DatabaseIsntOpenedExceptionForCRUD();
     } else {
       return db;
@@ -69,19 +100,19 @@ class Services {
   Future<UserDB> getOrCreateUser({required String email}) async {
     try {
       final user = await getUser(email: email);
+      _user = user;
       return user;
     } on UserNotFoundExceptionForCRUD catch (_) {
       final user = await createAnUser(email: email);
       return user;
     } on DatabaseIsntOpenedExceptionForCRUD catch (_) {
-      log('message');
       throw GenericException();
     } on GenericException catch (_) {
-      log('message');
       throw GenericException();
     } catch (e) {
-      log('message');
-      throw GenericException();
+      // it was
+      // throw GenericException();
+      rethrow;
     }
   }
 
@@ -101,15 +132,11 @@ class Services {
       } else {
         return UserDB.fromRow(userResults.last);
       }
-    } on UserNotFoundExceptionForCRUD catch (e) {
-      log('Database isnt opened $e');
+    } on UserNotFoundExceptionForCRUD catch (_) {
       throw UserNotFoundExceptionForCRUD();
-    } on DatabaseIsntOpenedExceptionForCRUD catch (e) {
-      log('Database isnt opened $e');
+    } on DatabaseIsntOpenedExceptionForCRUD catch (_) {
       throw DatabaseIsntOpenedExceptionForCRUD();
     } catch (e) {
-      log('Generic exception');
-
       throw GenericException();
     }
   }
@@ -122,7 +149,8 @@ class Services {
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    final user = await getUser(email: owner.email);
+    // final user =
+    await getUser(email: owner.email);
     // if (user != owner) {
     //   throw CouldNotFineTheUser();
     // }
@@ -133,13 +161,16 @@ class Services {
       contentColumn: content,
       importanceColumn: enumToString(importance),
     });
-    return NoteDB(
+    final note = NoteDB(
       noteId: noteId,
       id: owner.id,
       title: title,
       content: content,
       importance: importance,
     );
+    _notes.add(note);
+    _notesStreamController.add(_notes);
+    return note;
   }
 
   Future<void> deleteNote({required int noteId}) async {
@@ -153,11 +184,17 @@ class Services {
     if (result == 0) {
       throw CouldNotDeleteNote();
     } else {
-      log('Note has been deleted successefully');
+      // final countBefore = _notes.length;
+
+      _notes.removeWhere((note) => note.noteId == noteId);
+      // if (_notes.length != countBefore) {
+      _notesStreamController.add(_notes);
+      ('Note has been deleted successefully');
+      // }
     }
   }
 
-  Future<void> deleteAllNoteOfProviderUser({required String email}) async {
+  Future<int> deleteAllNoteOfProviderUser({required String email}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final user = await getUser(email: email);
@@ -169,7 +206,10 @@ class Services {
     if (result == 0) {
       throw CouldNotDeleteAllNotesOfProvidedEmailUser();
     } else {
-      log('All notes of provided user, have been deleted successefully');
+      _notes = [];
+      _notesStreamController.add(_notes);
+      ('All notes of provided user, have been deleted successefully');
+      return result;
     }
   }
 
@@ -180,7 +220,9 @@ class Services {
     if (result == 0) {
       throw CouldNotDeleteAllNotesOfAllUsers();
     } else {
-      log('All notes have been deleted successefully');
+      _notes = [];
+      _notesStreamController.add(_notes);
+      ('All notes have been deleted successefully');
     }
   }
 
@@ -208,6 +250,9 @@ class Services {
       throw CouldNotUpdateNote();
     } else {
       final updatedNote = await getNote(noteId: noteId);
+      _notes.removeWhere((note) => updatedNote.noteId == note.noteId);
+      _notes.add(updatedNote);
+      _notesStreamController.add(_notes);
       return updatedNote;
     }
   }
@@ -217,13 +262,11 @@ class Services {
     final db = getDbOrThrow();
     List<NoteDB> returnedNotes = [];
     final notes = await db.query(noteTable);
-    if (notes.isEmpty) {
-      throw CouldNotFindTheAtLeastOneNote();
-    } else {
-      for (final i in notes) {
-        returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
-      }
-      log(returnedNotes.toString());
+
+    for (final i in notes) {
+      returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
+
+      (returnedNotes.toString());
     }
     return returnedNotes;
   }
@@ -240,7 +283,7 @@ class Services {
       for (final i in notes) {
         returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
       }
-      log(returnedNotes.toString());
+      (returnedNotes.toString());
     }
     return returnedNotes;
   }
@@ -258,6 +301,12 @@ class Services {
       throw CouldNotFindTheNote();
     } else {
       final fetchedNote = note[0];
+      _notes.removeWhere((note) => noteId == note.noteId);
+
+      /// error
+      /// covertingQueryRowToANoteDbObject
+      _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values.toList()));
+      _notesStreamController.add(_notes);
       return covertingQueryRowToANoteDbObject(fetchedNote.values.toList());
     }
   }
@@ -282,13 +331,13 @@ class Services {
         return UserDB(id: id, email: email);
       }
     } on UserAlreadyExistsBerlin catch (e) {
-      log('user already exists $e');
+      ('user already exists $e');
       throw UserAlreadyExistsBerlin();
     } on DatabaseIsntOpenedExceptionForCRUD catch (e) {
-      log('Database isnt opened $e');
+      ('Database isnt opened $e');
       throw DatabaseIsntOpenedExceptionForCRUD();
     } catch (e) {
-      log('Generic exception');
+      ('Generic exception');
       throw GenericException();
     }
   }
