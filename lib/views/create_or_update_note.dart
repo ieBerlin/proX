@@ -4,6 +4,7 @@ import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -157,198 +158,246 @@ class _noteListViewState extends State<noteListView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.blue,
-        ),
-        body: FutureBuilder(
-            future: createOrGetExsitingNote(context),
-            builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.done:
-                  _setupTitleControllerListener();
-                  _setupContentControllerListener();
+    return ChangeNotifierProvider(
+        create: (context) => NoteViewClass(),
+        child: Consumer<NoteViewClass>(
+          builder: (context, value, child) {
+            return Scaffold(
+                backgroundColor: Colors.white,
+                appBar: AppBar(
+                  backgroundColor: Colors.blue,
+                ),
+                body: FutureBuilder(
+                    future: createOrGetExsitingNote(context),
+                    builder: (context, snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.done:
+                          _setupTitleControllerListener();
+                          _setupContentControllerListener();
 
-                  return Column(
-                    children: [
-                      const Text('Note title'),
-                      TextField(
-                        onChanged: (value) {
-                          title = value;
-                          createOrGetExsitingNote(context);
-                        },
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                            hintText: 'Enter your note\'s title'),
-                      ),
-                      const Text('Note body'),
-                      TextField(
-                        onChanged: (value) {
-                          content = value;
-                          createOrGetExsitingNote(context);
-                        },
-                        controller: _bodyController,
-                        decoration: const InputDecoration(
-                            hintText: 'Enter your note\'s body'),
-                      ),
-                      Row(
-                        children: [
-                          const Text('Priority'),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          InkWell(
-                              onTap: () {
-                                _noteImportance = NoteImportance.red;
-                                print(_noteImportance);
-                                _index = 1;
-                              },
-                              child: _index == 1
-                                  ? const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Color(0xff545454),
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      ],
-                                    )
-                                  : const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Colors.transparent,
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      ],
-                                    )),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          InkWell(
-                              onTap: () {
-                                _noteImportance = NoteImportance.orange;
-                                print(_noteImportance);
+                          return Column(
+                            children: [
+                              const Text('Note title'),
+                              TextField(
+                                onChanged: (value) {
+                                  title = value;
+                                  createOrGetExsitingNote(context);
+                                },
+                                controller: _titleController,
+                                decoration: const InputDecoration(
+                                    hintText: 'Enter your note\'s title'),
+                              ),
+                              const Text('Note body'),
+                              TextField(
+                                onChanged: (value) {
+                                  content = value;
+                                  createOrGetExsitingNote(context);
+                                },
+                                controller: _bodyController,
+                                decoration: const InputDecoration(
+                                    hintText: 'Enter your note\'s body'),
+                              ),
+                              Row(
+                                children: [
+                                  const Text('Priority'),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  InkWell(
+                                      onTap: () {
+                                        _noteImportance = NoteImportance.red;
+                                        _index = 1;
+                                        value.colorChanged(_index);
+                                      },
+                                      child: _index == 1
+                                          ? const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Color(0xff545454),
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              ],
+                                            )
+                                          : const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              ],
+                                            )),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  InkWell(
+                                      onTap: () {
+                                        _noteImportance = NoteImportance.orange;
+                                        _index = 2;
+                                        value.colorChanged(_index);
+                                      },
+                                      child: _index == 2
+                                          ? const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Color(0xff545454),
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor:
+                                                      Colors.orange,
+                                                ),
+                                              ],
+                                            )
+                                          : const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor:
+                                                      Colors.orange,
+                                                ),
+                                              ],
+                                            )),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  InkWell(
+                                      onTap: () {
+                                        _noteImportance = NoteImportance.yellow;
+                                        _index = 3;
+                                        value.colorChanged(_index);
+                                      },
+                                      child: _index == 3
+                                          ? const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Color(0xff545454),
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor:
+                                                      Colors.yellow,
+                                                ),
+                                              ],
+                                            )
+                                          : const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor:
+                                                      Colors.yellow,
+                                                ),
+                                              ],
+                                            )),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  InkWell(
+                                      onTap: () {
+                                        _noteImportance = NoteImportance.green;
+                                        _index = 4;
+                                        value.colorChanged(_index);
+                                      },
+                                      child: _index == 4
+                                          ? const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Color(0xff545454),
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor: Colors.green,
+                                                ),
+                                              ],
+                                            )
+                                          : const Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundColor: Colors.green,
+                                                ),
+                                              ],
+                                            ))
+                                ],
+                              ),
+                            ],
+                          );
+                        default:
+                          return const CircularProgressIndicator();
+                      }
+                    }));
+          },
+        ));
+  }
+}
 
-                                _index = 2;
-                              },
-                              child: _index == 2
-                                  ? const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Color(0xff545454),
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.orange,
-                                        ),
-                                      ],
-                                    )
-                                  : const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Colors.transparent,
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.orange,
-                                        ),
-                                      ],
-                                    )),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          InkWell(
-                              onTap: () {
-                                _noteImportance = NoteImportance.yellow;
-                                print(_noteImportance);
+class NoteViewClass extends ChangeNotifier {
+  Color parentColor = Colors.transparent;
+  Color childColor = Colors.red;
 
-                                _index = 3;
-                              },
-                              child: _index == 3
-                                  ? const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Color(0xff545454),
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.yellow,
-                                        ),
-                                      ],
-                                    )
-                                  : const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Colors.transparent,
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.yellow,
-                                        ),
-                                      ],
-                                    )),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          InkWell(
-                              onTap: () {
-                                _noteImportance = NoteImportance.green;
-                                print(_noteImportance);
+  void colorChanged(int _index) {
+    parentColor = Colors.white;
 
-                                _index = 4;
-                              },
-                              child: _index == 4
-                                  ? const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Color(0xff545454),
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      ],
-                                    )
-                                  : const Stack(
-                                      alignment: AlignmentDirectional.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Colors.transparent,
-                                        ),
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      ],
-                                    ))
-                        ],
-                      ),
-                    ],
-                  );
-                default:
-                  return const CircularProgressIndicator();
-              }
-            }));
+    switch (_index) {
+      case 2:
+        childColor = Colors.orange;
+        break;
+      case 3:
+        childColor = Colors.yellow;
+        break;
+      case 4:
+        childColor = Colors.green;
+        break;
+      case 1:
+      default:
+        childColor = Colors.red;
+    }
+    notifyListeners();
   }
 }

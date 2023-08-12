@@ -4,7 +4,6 @@ import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/views/forgot_password_view.dart';
 import 'package:projectx/views/home_page_view.dart';
-import 'package:projectx/views/create_or_update_note.dart';
 import 'package:projectx/views/login_view.dart';
 import 'package:projectx/views/register_view.dart';
 import 'package:projectx/views/reset_password_view.dart';
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
         registerViewRoute: (context) => const RegisterView(),
         forgotPasswordViewRoute: (context) => const ForgotPasswordView(),
         resetPasswordViewRoute: (context) => const ResetPasswordView(),
-        homePageViewRoute: (context) => const NotesView(),
+        homePageViewRoute: (context) => const NoteView(),
         verificationEmailViewRoute: (context) => const VerifieEmailView(),
       },
       home: const Oriented(),
@@ -53,7 +52,7 @@ class _OrientedState extends State<Oriented> {
 
               if (user != null) {
                 if (user.emailVerified) {
-                  return const NotesView();
+                  return const NoteView();
                 } else {
                   return const VerifieEmailView();
                 }

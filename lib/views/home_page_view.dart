@@ -1,20 +1,22 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:projectx/constants/routes/routes.dart';
+import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
+import 'package:projectx/utilities/dialogs/logout_dialog.dart';
 import 'package:projectx/views/create_or_update_note.dart';
 import 'package:projectx/views/notes_list_view.dart';
 
-class NotesView extends StatefulWidget {
-  const NotesView({Key? key}) : super(key: key);
+class NoteView extends StatefulWidget {
+  const NoteView({Key? key}) : super(key: key);
 
   @override
-  _NotesViewState createState() => _NotesViewState();
+  _NoteViewState createState() => _NoteViewState();
 }
 
-class _NotesViewState extends State<NotesView> {
+class _NoteViewState extends State<NoteView> {
   late final Services services;
   String get emailUser => AuthService.firebase().currentUser!.email;
   @override
@@ -26,6 +28,13 @@ class _NotesViewState extends State<NotesView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: ((context) => const noteListView())));
+          },
+          child: const Icon(Icons.add),
+        ),
         appBar: AppBar(
           backgroundColor: Colors.blue,
           title: const Text(
@@ -33,19 +42,29 @@ class _NotesViewState extends State<NotesView> {
             style: TextStyle(color: Colors.white),
           ),
           actions: [
-            IconButton(
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: ((context) => const noteListView())));
-                },
-                icon: const Icon(Icons.add)),
-            IconButton(
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                      loginViewRoute, (route) => false);
-                },
-                icon: const Icon(Icons.exit_to_app))
+            PopupMenuButton<MenuAction>(
+              onSelected: (value) async {
+                switch (value) {
+                  case MenuAction.logout:
+                    final shouldLogout = await showLogOutDialog(context);
+                    if (shouldLogout) {
+                      await AuthService.firebase().logOut();
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        loginViewRoute,
+                        (_) => false,
+                      );
+                    }
+                }
+              },
+              itemBuilder: (context) {
+                return const [
+                  PopupMenuItem<MenuAction>(
+                    value: MenuAction.logout,
+                    child: Text('Log out'),
+                  ),
+                ];
+              },
+            ),
           ],
         ),
         body: FutureBuilder(
@@ -62,7 +81,17 @@ class _NotesViewState extends State<NotesView> {
                             if (snapshot.hasData &&
                                 snapshot.data!.toList().isNotEmpty) {
                               final allNotes = snapshot.data as List<NoteDB>;
-                              return NotesListView(notes: allNotes);
+                              return NotesListView(
+                                notes: allNotes,
+                                onDeleteNote: (note) async {
+                                  await services.deleteNote(
+                                      noteId: note.noteId);
+                                },
+                                onTap: (tap) {
+                                  log(tap.toString());
+                                  log('tapped');
+                                },
+                              );
                             } else {
                               return const Text('No data to display');
                             }
@@ -70,6 +99,7 @@ class _NotesViewState extends State<NotesView> {
                             return const CircularProgressIndicator();
                         }
                       }));
+
                 default:
                   return const CircularProgressIndicator();
               }

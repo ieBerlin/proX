@@ -121,4 +121,14 @@ class FirebaseAuthProvider implements AuthProvider {
       return AuthUser.currentUser(user);
     }
   }
+
+  @override
+  Future<void> logOut() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseAuth.instance.signOut();
+    } else {
+      throw UserNotLoggedInException();
+    }
+  }
 }

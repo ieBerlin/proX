@@ -96,14 +96,21 @@ class Services {
     }
   }
 
-  Future<UserDB> getOrCreateUser({required String email}) async {
+  Future<UserDB> getOrCreateUser(
+      {required String email, bool setAsCurrentUser = true}) async {
     try {
       final user = await getUser(email: email);
+      if (setAsCurrentUser) {
+        _user = user;
+      }
       _user = user;
       return user;
     } on UserNotFoundExceptionForCRUD catch (_) {
-      final user = await createAnUser(email: email);
-      return user;
+      final createdUser = await createAnUser(email: email);
+      if (setAsCurrentUser) {
+        _user = createdUser;
+      }
+      return createdUser;
     } on DatabaseIsntOpenedExceptionForCRUD catch (_) {
       throw GenericException();
     } on GenericException catch (_) {
@@ -264,8 +271,6 @@ class Services {
 
     for (final i in notes) {
       returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
-
-      (returnedNotes.toString());
     }
     return returnedNotes;
   }

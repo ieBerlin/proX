@@ -35,3 +35,4 @@ String enumToString(NoteImportance? noteImportance) {
       return 'green';
   }
 }
+enum MenuAction { logout }
