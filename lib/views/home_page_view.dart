@@ -29,17 +29,22 @@ class _NoteViewState extends State<NoteView> {
   Widget build(BuildContext context) {
     return Scaffold(
         floatingActionButton: FloatingActionButton(
+          backgroundColor: const Color(0xff813995),
           onPressed: () {
             Navigator.of(context).push(MaterialPageRoute(
                 builder: ((context) => const noteListView())));
           },
-          child: const Icon(Icons.add),
+          child: const Icon(Icons.library_add),
         ),
         appBar: AppBar(
-          backgroundColor: Colors.blue,
-          title: const Text(
-            'Your Notes',
-            style: TextStyle(color: Colors.white),
+          backgroundColor: const Color(0xff813995),
+          elevation: 0,
+          title: Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Text(
+              DateTime.now().hour > 12 ? 'Good Afternoon!' : 'Good Morning!',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
           actions: [
             PopupMenuButton<MenuAction>(
@@ -91,6 +96,7 @@ class _NoteViewState extends State<NoteView> {
                                   log(tap.toString());
                                   log('tapped');
                                 },
+                                services: services,
                               );
                             } else {
                               return const Text('No data to display');

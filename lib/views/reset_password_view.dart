@@ -13,9 +13,11 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: const Color(0xff813995),
           centerTitle: true,
           title: const Text(
             'Reset password page',
+            style: TextStyle(color: Colors.white),
             textAlign: TextAlign.center,
           ),
         ),

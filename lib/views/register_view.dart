@@ -35,7 +35,7 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xff813995),
         centerTitle: true,
         title: const Text(
           'Register',
@@ -77,7 +77,7 @@ class _RegisterViewState extends State<RegisterView> {
                 if (states.contains(MaterialState.pressed)) {
                   return Colors.amber;
                 }
-                return Colors.blue;
+                return const Color(0xff813995);
                 // return Colors.blue;officielkaytout8@gmail.com
               })),
               onPressed: () async {

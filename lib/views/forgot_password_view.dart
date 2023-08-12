@@ -34,7 +34,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               Icons.arrow_back,
               color: Colors.white,
             )),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xff813995),
         centerTitle: true,
         title: const Text(
           'Reset you password',
@@ -56,7 +56,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                 if (states.contains(MaterialState.pressed)) {
                   return Colors.red;
                 }
-                return Colors.blue;
+                return const Color(0xff813995);
               })),
               onPressed: () async {
                 try {

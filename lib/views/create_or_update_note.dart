@@ -165,7 +165,9 @@ class _noteListViewState extends State<noteListView> {
             return Scaffold(
                 backgroundColor: Colors.white,
                 appBar: AppBar(
-                  backgroundColor: Colors.blue,
+                  centerTitle: true,
+                  title: const Text('Create note'),
+                  backgroundColor: const Color(0xff813995),
                 ),
                 body: FutureBuilder(
                     future: createOrGetExsitingNote(context),

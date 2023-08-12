@@ -36,7 +36,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xff813995),
         centerTitle: true,
         title: const Text(
           'Login',
@@ -78,7 +78,7 @@ class _LoginViewState extends State<LoginView> {
                 if (states.contains(MaterialState.pressed)) {
                   return Colors.amber;
                 }
-                return Colors.blue;
+                return const Color(0xff813995);
               })),
               onPressed: () async {
                 // officielkaytout8@gmail.com
