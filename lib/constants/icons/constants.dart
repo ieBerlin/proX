@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 Icon visibility({required bool isPressed}) {
-  if (isPressed) {
-    return const Icon(Icons.visibility);
+  if (!isPressed) {
+    return Icon(
+      Icons.visibility,
+      color: Colors.grey[700],
+    );
   } else {
-    return const Icon(Icons.visibility_off);
+    return Icon(Icons.visibility_off, color: Colors.grey[700]);
   }
 }

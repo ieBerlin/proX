@@ -13,7 +13,7 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
-  bool isPressed = false;
+  bool isPressed = true;
   late final TextEditingController email;
   late final TextEditingController password;
 
@@ -34,103 +34,292 @@ class _RegisterViewState extends State<RegisterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xff813995),
-        centerTitle: true,
-        title: const Text(
-          'Register',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          TextField(
-            controller: email,
-            decoration: const InputDecoration(hintText: 'Enter your email'),
-            autocorrect: false,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          TextField(
-            controller: password,
-            decoration: InputDecoration(
-                hintText: 'Enter your password',
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      isPressed = !isPressed;
-                    });
-                  },
-                  icon: visibility(isPressed: isPressed),
+        backgroundColor: const Color(0xff354654),
+        body: SafeArea(
+          child: Container(
+            constraints: const BoxConstraints.expand(),
+            margin: const EdgeInsets.only(top: 70),
+            decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
                 )),
-            autocorrect: false,
-            enableSuggestions: false,
-            obscureText: !isPressed,
-          ),
-          const SizedBox(
-            height: 30,
-          ),
-          ElevatedButton(
-              style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.pressed)) {
-                  return Colors.amber;
-                }
-                return const Color(0xff813995);
-                // return Colors.blue;officielkaytout8@gmail.com
-              })),
-              onPressed: () async {
-                try {
-                  await AuthService.firebase().createUser(
-                    email: email.text,
-                    password: password.text,
-                  );
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: Image.asset(
+                          'assets/images/avicii.png',
+                          width: 70,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4,
+                        width: 100,
+                        child: Divider(
+                          color: Color(0xff354654),
+                          thickness: 4,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 85,
+                      )
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Image.asset(
+                          'assets/images/login_register_image.png',
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(left: 43),
+                        alignment: Alignment.centerLeft,
+                        child: const Text(
+                          'Get Started',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 23),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(left: 40),
+                        alignment: Alignment.centerLeft,
+                        child: const Text(
+                          'Enter your credentials to create an account.',
+                          style: TextStyle(
+                              color: Colors.black54,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 13),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 21,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
+                        child: TextField(
+                          controller: email,
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+                          enableSuggestions: true,
+                          cursorColor: const Color(0xff00b6af),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.mark_email_read),
+                            prefixIconColor: const Color(0xff00b6af),
+                            hintText: 'Enter you email',
+                            hintStyle:
+                                const TextStyle(color: Color(0xff354758)),
+                            filled: true,
+                            fillColor: const Color(
+                                0xffe5eef5), // Set the background color
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                  10.0), // Add a border radius
+                              borderSide: BorderSide.none, // Hide the border
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              // Add focused border styling
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: const BorderSide(
+                                  width: 2,
+                                  color: Color(
+                                      0xff00b6af)), // Customize border color
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
+                        child: TextField(
+                          controller: password,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          obscureText: isPressed,
+                          cursorColor: const Color(0xff00b6af),
+                          decoration: InputDecoration(
+                            hintText: 'Enter you password',
+                            hintStyle:
+                                const TextStyle(color: Color(0xff354758)),
+                            prefixIcon: const Icon(Icons.lock_clock_rounded),
+                            prefixIconColor: const Color(0xff00b6af),
+                            suffixIcon: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  isPressed = !isPressed;
+                                });
+                              },
+                              child: visibility(isPressed: isPressed),
+                            ),
 
-                  await AuthService.firebase().sendEmailVerification();
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    verificationEmailViewRoute,
-                    (route) => false,
-                  );
-                } on InvalidEmailException {
-                  await showErrorDialog(
-                      context: context, content: 'Invalid email');
-                } on MissingPasswordException {
-                  await showErrorDialog(
-                      context: context, content: 'Missing password');
-                } on WeakPasswordException {
-                  await showErrorDialog(
-                      context: context, content: 'Weak password');
-                } on EmailAlreadyInUseException {
-                  await showErrorDialog(
-                      context: context, content: 'Email is already in use');
-                } on GenericException {
-                  await showErrorDialog(
-                      context: context,
-                      content: 'An error occured while authentication');
-                } catch (exception) {
-                  await showErrorDialog(
-                      context: context,
-                      content: 'An error occured while authentication');
-                }
-              },
-              child: const Text(
-                'Register',
-                style: TextStyle(color: Colors.white),
-              )),
-          const SizedBox(
-            height: 30,
+                            filled: true,
+                            fillColor: const Color(
+                                0xffe5eef5), // Set the background color
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                  10.0), // Add a border radius
+                              borderSide: BorderSide.none, // Hide the border
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              // Add focused border styling
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: const BorderSide(
+                                  width: 2,
+                                  color: Color(
+                                      0xff00b6af)), // Customize border color
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              await AuthService.firebase().createUser(
+                                email: email.text,
+                                password: password.text,
+                              );
+
+                              await AuthService.firebase()
+                                  .sendEmailVerification();
+                              Navigator.of(context).pushNamedAndRemoveUntil(
+                                verificationEmailViewRoute,
+                                (route) => false,
+                              );
+                            } on InvalidEmailException {
+                              await showErrorDialog(
+                                  context: context, content: 'Invalid email');
+                            } on MissingPasswordException {
+                              await showErrorDialog(
+                                  context: context,
+                                  content: 'Missing password');
+                            } on WeakPasswordException {
+                              await showErrorDialog(
+                                  context: context, content: 'Weak password');
+                            } on EmailAlreadyInUseException {
+                              await showErrorDialog(
+                                  context: context,
+                                  content: 'Email is already in use');
+                            } on GenericException {
+                              await showErrorDialog(
+                                  context: context,
+                                  content:
+                                      'An error occured while authentication');
+                            } catch (exception) {
+                              await showErrorDialog(
+                                  context: context,
+                                  content:
+                                      'An error occured while authentication');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  10.0), // Set the border radius here
+                            ),
+                            backgroundColor: const Color(0xffff6346),
+                            minimumSize: const Size(double.infinity, 55),
+                          ),
+                          child: const Text(
+                            'Register',
+                            style: TextStyle(color: Colors.white, fontSize: 23),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      const Row(
+                        children: [
+                          SizedBox(
+                            width: 52,
+                          ),
+                          Expanded(
+                            child: Divider(
+                              thickness: 2,
+                              color: Color(0xffFFBB4C),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 12,
+                          ),
+                          Text(
+                            'OR',
+                            style: TextStyle(
+                                color: Color(0xff354654),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600),
+                          ),
+                          SizedBox(
+                            width: 12,
+                          ),
+                          Expanded(
+                            child: Divider(
+                              thickness: 2,
+                              color: Color(0xffFFBB4C),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 52,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Already have an account',
+                            style: TextStyle(color: Color(0xff324452)),
+                          ),
+                          TextButton(
+                              style: ButtonStyle(
+                                  overlayColor: MaterialStateProperty.all(
+                                      Colors.transparent)),
+                              onPressed: () {
+                                Navigator.of(context).pushNamedAndRemoveUntil(
+                                  loginViewRoute,
+                                  (context) => false,
+                                );
+                              },
+                              child: const Text('Sign in',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xff00B4B2))))
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  loginViewRoute,
-                  (context) => false,
-                );
-              },
-              child: const Text('Already have an account, login !'))
-        ],
-      ),
-    );
+        ));
   }
 }
