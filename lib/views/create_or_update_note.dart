@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:projectx/bloc/bloc.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/crud/services.dart';
@@ -404,31 +405,5 @@ class _NoteListViewState extends State<NoteListView> {
         ),
       ),
     );
-  }
-}
-
-class PriorityIndex {
-  int index;
-  PriorityIndex({required this.index});
-}
-
-class PriorityBloc extends Cubit<PriorityIndex> {
-  final NoteImportance initNoteImportance;
-  PriorityBloc({required this.initNoteImportance})
-      : super(PriorityIndex(
-            index: enumToIndex(noteImportance: initNoteImportance)));
-  void indexChanger(int index) => emit(PriorityIndex(index: index));
-}
-
-int enumToIndex({required NoteImportance noteImportance}) {
-  switch (noteImportance) {
-    case NoteImportance.red:
-      return 1;
-    case NoteImportance.orange:
-      return 2;
-    case NoteImportance.yellow:
-      return 3;
-    case NoteImportance.green:
-      return 4;
   }
 }

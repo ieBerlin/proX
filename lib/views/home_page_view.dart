@@ -26,22 +26,23 @@ class _NoteViewState extends State<NoteView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: const Color.fromARGB(255, 186, 186, 186),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: const Color(0xff813995),
+          backgroundColor: const Color(0xff2a5ebc),
           onPressed: () async {
             Navigator.of(context).pushNamed(noteListViewRoute);
           },
           child: const Icon(Icons.library_add),
         ),
         appBar: AppBar(
-          backgroundColor: const Color(0xff813995),
-          elevation: 0,
-          title: Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Text(
-              DateTime.now().hour > 12 ? 'Good Afternoon!' : 'Good Morning!',
-              style: const TextStyle(color: Colors.white),
-            ),
+          toolbarHeight: 70,
+          backgroundColor: const Color(0xff2a5ebc),
+          // elevation: 0,s
+          title: const Text(
+            'All notes',
+            style: TextStyle(
+                fontSize: 30, color: Colors.white, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.left,
           ),
           actions: [
             PopupMenuButton<MenuAction>(
@@ -128,18 +129,5 @@ class _NoteViewState extends State<NoteView> {
         await services.deleteNote(noteId: i.noteId);
       }
     }
-  }
-}
-
-extension GetArgument on BuildContext {
-  T? getArguments<T>() {
-    final modelRoute = ModalRoute.of(this);
-    if (modelRoute != null) {
-      final args = modelRoute.settings.arguments;
-      if (args != null && args is T) {
-        return args as T;
-      }
-    }
-    return null;
   }
 }
