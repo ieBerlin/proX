@@ -83,6 +83,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: TextField(
+                  controller: email,
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                   enableSuggestions: true,

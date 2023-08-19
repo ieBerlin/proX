@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:projectx/services/auth/auth_exceptions.dart';
@@ -94,10 +96,9 @@ class FirebaseAuthProvider implements AuthProvider {
           throw InvalidEmailException();
         case 'user-not-found':
           throw UserNotFoundException();
-        default:
-          throw GenericException();
       }
     } catch (error) {
+      log(error.toString());
       throw GenericException();
     }
   }

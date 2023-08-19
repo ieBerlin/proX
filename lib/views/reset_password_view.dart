@@ -12,36 +12,54 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color(0xff813995),
-          centerTitle: true,
-          title: const Text(
-            'Reset password page',
-            style: TextStyle(color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'We\'ve send you a link,\nfollow it to reset your password',
-                textAlign: TextAlign.center,
+        backgroundColor: Colors.white,
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/images/reset_password_done.jpg'),
+            const SizedBox(
+              height: 20,
+            ),
+            const Text(
+              'We\'Ve Send You a Link,\nFollow It To Reset Your Password',
+              style: TextStyle(
+                  color: Color(0xffFFBB4C),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    loginViewRoute,
+                    (context) => false,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                        10.0), // Set the border radius here
+                  ),
+                  backgroundColor: const Color(0xff354758),
+                  minimumSize: const Size(double.infinity, 55),
+                ),
+                child: const Text(
+                  'Back To Login Page',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 23,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      loginViewRoute,
-                      (context) => false,
-                    );
-                  },
-                  child: const Text('Back to login page'))
-            ],
-          ),
+            ),
+          ],
         ));
   }
 }

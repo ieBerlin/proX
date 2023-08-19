@@ -117,7 +117,6 @@ class _LoginViewState extends State<LoginView> {
                           controller: email,
                           keyboardType: TextInputType.emailAddress,
                           autocorrect: false,
-                          enableSuggestions: true,
                           cursorColor: const Color(0xff00b6af),
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.mark_email_read),

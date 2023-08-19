@@ -39,6 +39,8 @@ dependencies:
   sqflite: ^2.3.0
   path_provider: ^2.1.0
   provider: ^6.0.5
+  bloc: ^8.1.2
+  flutter_bloc: ^8.1.3
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +68,7 @@ flutter:
     - assets/images/avicii.png
     - assets/images/login_register_image.png
     - assets/images/forgot_password.jpg
+    - assets/images/reset_password_done.jpg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

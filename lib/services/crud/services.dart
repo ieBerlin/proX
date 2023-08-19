@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/constants/db_constants/constants.dart';
 import 'package:projectx/extentions/list/filter.dart';
@@ -31,7 +30,6 @@ class Services {
       _notesStreamController.stream.filter((note) {
         final currentUser = _user;
         if (currentUser != null) {
-          log(currentUser.toString());
           return note.id == currentUser.id;
         } else {
           throw UserShouldBeSetBeforeReadingAllNotes();
