@@ -4,4 +4,4 @@ const forgotPasswordViewRoute = '/forgot-password/';
 const resetPasswordViewRoute = '/reset-password/';
 const homePageViewRoute = '/home-page/';
 const verificationEmailViewRoute = '/verification-email/';
-const noteListViewRoute = '/Note-List-View';
+const createOrUpdateNoteRoute = '/Note-List-View';

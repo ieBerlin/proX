@@ -1,6 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:projectx/constants/routes/routes.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:projectx/services/auth/bloc/auth_bloc.dart';
+import 'package:projectx/services/auth/bloc/auth_event.dart';
 
 class VerifieEmailView extends StatefulWidget {
   const VerifieEmailView({super.key});
@@ -42,8 +43,7 @@ class _VerifieEmailViewState extends State<VerifieEmailView> {
             ),
             TextButton(
                 onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.of(context).pushNamed(loginViewRoute);
+                  context.read<AuthBloc>().add(const AuthEventLogOut());
                 },
                 child: const Text('Back to login page'))
           ],

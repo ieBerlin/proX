@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
+import 'package:projectx/services/auth/bloc/auth_bloc.dart';
+import 'package:projectx/services/auth/bloc/auth_event.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
 import 'package:projectx/utilities/dialogs/logout_dialog.dart';
@@ -30,7 +33,7 @@ class _NoteViewState extends State<NoteView> {
         floatingActionButton: FloatingActionButton(
           backgroundColor: const Color(0xff2a5ebc),
           onPressed: () async {
-            Navigator.of(context).pushNamed(noteListViewRoute);
+            Navigator.of(context).pushNamed(createOrUpdateNoteRoute);
           },
           child: const Icon(Icons.library_add),
         ),
@@ -51,11 +54,8 @@ class _NoteViewState extends State<NoteView> {
                   case MenuAction.logout:
                     final shouldLogout = await showLogOutDialog(context);
                     if (shouldLogout) {
-                      await AuthService.firebase().logOut();
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                        loginViewRoute,
-                        (_) => false,
-                      );
+                      // ignore: use_build_context_synchronously
+                      context.read<AuthBloc>().add(const AuthEventLogOut());
                     }
                 }
               },
@@ -97,7 +97,7 @@ class _NoteViewState extends State<NoteView> {
                                 },
                                 onTap: (note) {
                                   Navigator.of(context).pushNamed(
-                                    noteListViewRoute,
+                                    createOrUpdateNoteRoute,
                                     arguments: note,
                                   );
                                 },
