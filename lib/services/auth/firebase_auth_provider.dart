@@ -87,7 +87,7 @@ class FirebaseAuthProvider implements AuthProvider {
   }
 
   @override
-  Future<void> forgotPassword({required String email}) async {
+  Future<void> sendPasswordReset({required String email}) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (exception) {
