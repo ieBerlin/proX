@@ -7,6 +7,7 @@ import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
+// import 'package:share_plus/share_plus.dart';
 
 class NoteListView extends StatefulWidget {
   const NoteListView({super.key});
@@ -22,7 +23,8 @@ class _NoteListViewState extends State<NoteListView> {
   final Services _services = Services();
   late final TextEditingController _titleController;
   late final TextEditingController _bodyController;
-
+  late String sharedNoteContent =
+      '${_titleController.text} \n ${_bodyController.text}';
   Future<NoteDB> createOrGetExsitingNote(BuildContext context) async {
     final widgetNote = context.getArguments<NoteDB>();
     if (widgetNote != null) {
@@ -153,6 +155,13 @@ class _NoteListViewState extends State<NoteListView> {
                 fontSize: 30, color: Colors.white, fontWeight: FontWeight.w600),
             textAlign: TextAlign.left,
           ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  // Share.share(sharedNoteContent);
+                },
+                icon: const Icon(Icons.share))
+          ],
         ),
         bottomNavigationBar: const Padding(
           padding: EdgeInsets.symmetric(vertical: 10),

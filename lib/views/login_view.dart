@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projectx/constants/routes/routes.dart';
+import 'package:projectx/helpers/loading/loading_screen.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/utilities/dialog/show_error_dialog.dart';
 import '../constants/icons/constants.dart';
@@ -220,10 +221,12 @@ class _LoginViewState extends State<LoginView> {
                           onPressed: () async {
                             // officielkaytout8@gmail.com
                             try {
+                              LoadingOverlay.show(context);
                               await AuthService.firebase().logIn(
                                 email: email.text,
                                 password: password.text,
                               );
+                              LoadingOverlay.hide(context);
                               final user = AuthService.firebase().currentUser;
 
                               if (!user!.isEmailVerified) {

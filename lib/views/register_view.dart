@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projectx/constants/routes/routes.dart';
+import 'package:projectx/helpers/loading/loading_screen.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import '../constants/icons/constants.dart';
 import '../services/auth/auth_exceptions.dart';
@@ -197,6 +198,7 @@ class _RegisterViewState extends State<RegisterView> {
                         child: ElevatedButton(
                           onPressed: () async {
                             try {
+                              LoadingOverlay.show(context);
                               await AuthService.firebase().createUser(
                                 email: email.text,
                                 password: password.text,
@@ -204,10 +206,12 @@ class _RegisterViewState extends State<RegisterView> {
 
                               await AuthService.firebase()
                                   .sendEmailVerification();
+                                   LoadingOverlay.hide(context);
                               Navigator.of(context).pushNamedAndRemoveUntil(
                                 verificationEmailViewRoute,
                                 (route) => false,
                               );
+                             
                             } on InvalidEmailException {
                               await showErrorDialog(
                                   context: context, content: 'Invalid email');

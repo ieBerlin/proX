@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projectx/constants/routes/routes.dart';
+import 'package:projectx/helpers/loading/loading_screen.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/utilities/dialog/show_error_dialog.dart';
 import '../services/auth/auth_exceptions.dart';
@@ -118,8 +119,13 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                 child: ElevatedButton(
                   onPressed: () async {
                     try {
+                      LoadingOverlay.show(context);
+
                       await AuthService.firebase()
                           .forgotPassword(email: email.text);
+                      // ignore: use_build_context_synchronously
+                      LoadingOverlay.hide(context);
+
                       // ignore: use_build_context_synchronously
                       Navigator.of(context).pushNamedAndRemoveUntil(
                         resetPasswordViewRoute,
