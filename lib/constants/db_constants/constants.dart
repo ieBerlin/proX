@@ -1,6 +1,6 @@
 const idColumn = 'id';
 const emailColumn = 'email';
-const noteIdColumn = 'note_id';
+const noteIdColumn = 'noteId';
 const titleColumn = 'title';
 const contentColumn = 'content';
 const importanceColumn = 'importance';
@@ -17,12 +17,10 @@ CREATE TABLE IF NOT EXISTS "user" (
 
 const createNoteTableSql = '''
 CREATE TABLE IF NOT EXISTS "note" (
-  "noteId"	INTEGER NOT NULL,
-  "id"	INTEGER NOT NULL,
+    "id"	INTEGER NOT NULL,
+  "noteId"	TEXT NOT NULL,
 	"title"	TEXT NOT NULL,
 	"content"	TEXT NOT NULL,
-  
-  "importance"	TEXT NOT NULL,
-	PRIMARY KEY("noteId" AUTOINCREMENT)
+  "importance"	TEXT NOT NULL
 );
 ''';

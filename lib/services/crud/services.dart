@@ -145,22 +145,18 @@ class Services {
     }
   }
 
-  Future<NoteDB> createNote({
-    required String title,
-    required String content,
-    required NoteImportance importance,
-    required UserDB owner,
-  }) async {
+  Future<NoteDB> createNote(
+      {required String title,
+      required String content,
+      required NoteImportance importance,
+      required UserDB owner,
+      required String noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    // final user =
     await getUser(email: owner.email);
-    // if (user != owner) {
-    //   throw CouldNotFineTheUser();
-    // }
-
-    final noteId = await db.insert(noteTable, {
+    await db.insert(noteTable, {
       idColumn: owner.id,
+      noteIdColumn: noteId,
       titleColumn: title,
       contentColumn: content,
       importanceColumn: enumToString(importance),
@@ -177,7 +173,7 @@ class Services {
     return note;
   }
 
-  Future<void> deleteNote({required int noteId}) async {
+  Future<void> deleteNote({required String noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final result = await db.delete(
@@ -231,7 +227,7 @@ class Services {
   }
 
   Future<NoteDB> updateNote({
-    required int noteId,
+    required String noteId,
     required String title,
     required String content,
     required NoteImportance importance,
@@ -290,7 +286,7 @@ class Services {
     return returnedNotes;
   }
 
-  Future<NoteDB> getNote({required int noteId}) async {
+  Future<NoteDB> getNote({required String noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final note = await db.query(

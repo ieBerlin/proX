@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:bloc/bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/services/auth/auth_provider.dart';
@@ -107,8 +106,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: password,
         );
         if (!user!.isEmailVerified) {
-          log('${!user.isEmailVerified}it\'s must be false');
-
           emit(const AuthStateNeedsVerification(
             isLoading: false,
           ));
