@@ -20,6 +20,7 @@ class NoteListView extends StatefulWidget {
 class _NoteListViewState extends State<NoteListView> {
   NoteImportance _noteImportance = NoteImportance.red;
   NoteDB? _note;
+  var cloudNoteId;
   late final FirebaseCloudStorage _notesService;
   final Services _services = Services();
   late final TextEditingController _titleController;
@@ -42,16 +43,17 @@ class _NoteListViewState extends State<NoteListView> {
       final currentUser = AuthService.firebase().currentUser;
       final email = currentUser!.email;
       final owner = await _services.getUser(email: email);
-      final cloudNote =
-          await _notesService.createNewNote(ownerUserId: owner.id.toString());
       final newNote = await _services.createNote(
-        noteId: cloudNote.noteId,
         title: _titleController.text,
         content: _bodyController.text,
         importance: _noteImportance,
         owner: owner,
+        isSyncedInFirestoreDb: false,
       );
-      _note = newNote;
+
+      cloudNoteId = await _notesService.createNewNote(
+          ownerUserId: owner.id.toString(), noteId: newNote.noteId);
+      _note = cloudNoteId;
       return newNote;
     }
   }
@@ -61,7 +63,7 @@ class _NoteListViewState extends State<NoteListView> {
     if ((_titleController.text.isEmpty && _bodyController.text.isEmpty) &&
         note != null) {
       _services.deleteNote(noteId: note.noteId);
-      _notesService.deleteNote(documentId: note.noteId);
+      _notesService.deleteCloudNote(documentId: note.documentId);
     }
   }
 
@@ -90,11 +92,13 @@ class _NoteListViewState extends State<NoteListView> {
     final title = _titleController.text;
     final content = _bodyController.text;
     final importance = _noteImportance;
-    await _notesService.updateNote(
-      documentId: note.noteId,
+
+    await _notesService.updateCloudNote(
+      documentId: note.documentId,
       title: title,
       content: content,
       importance: enumToString(importance),
+      isSyncedInFirestoreDb: true,
     );
 
     await _services.updateNote(

@@ -95,8 +95,8 @@ class _NoteViewState extends State<NoteView> {
                                 onDeleteNote: (note) async {
                                   await services.deleteNote(
                                       noteId: note.noteId);
-                                  await _notesService.deleteNote(
-                                      documentId: note.noteId);
+                                  await _notesService.deleteCloudNote(
+                                      documentId: note.documentId);
                                 },
                                 onTap: (note) {
                                   Navigator.of(context).pushNamed(
