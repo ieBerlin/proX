@@ -1,10 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/bloc/bloc.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
-import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
@@ -19,9 +17,8 @@ class NoteListView extends StatefulWidget {
 
 class _NoteListViewState extends State<NoteListView> {
   NoteImportance _noteImportance = NoteImportance.red;
+
   NoteDB? _note;
-  var cloudNoteId;
-  late final FirebaseCloudStorage _notesService;
   final Services _services = Services();
   late final TextEditingController _titleController;
   late final TextEditingController _bodyController;
@@ -48,22 +45,17 @@ class _NoteListViewState extends State<NoteListView> {
         content: _bodyController.text,
         importance: _noteImportance,
         owner: owner,
-        isSyncedInFirestoreDb: false,
       );
-
-      cloudNoteId = await _notesService.createNewNote(
-          ownerUserId: owner.id.toString(), noteId: newNote.noteId);
-      _note = cloudNoteId;
+      _note = newNote;
       return newNote;
     }
   }
 
-  void _deleteNoteIfTextEmpty() async {
+  void _deleteNoteIfTextEmpty() {
     final note = _note;
-    if ((_titleController.text.isEmpty && _bodyController.text.isEmpty) &&
+    if ((_titleController.text.isEmpty || _bodyController.text.isEmpty) &&
         note != null) {
       _services.deleteNote(noteId: note.noteId);
-      _notesService.deleteCloudNote(documentId: note.documentId);
     }
   }
 
@@ -92,14 +84,6 @@ class _NoteListViewState extends State<NoteListView> {
     final title = _titleController.text;
     final content = _bodyController.text;
     final importance = _noteImportance;
-
-    await _notesService.updateCloudNote(
-      documentId: note.documentId,
-      title: title,
-      content: content,
-      importance: enumToString(importance),
-      isSyncedInFirestoreDb: true,
-    );
 
     await _services.updateNote(
       noteId: note.noteId,
@@ -131,8 +115,6 @@ class _NoteListViewState extends State<NoteListView> {
 
   @override
   void initState() {
-    _notesService = FirebaseCloudStorage();
-
     _titleController = TextEditingController();
     _bodyController = TextEditingController();
     super.initState();
@@ -151,287 +133,273 @@ class _NoteListViewState extends State<NoteListView> {
   Widget build(BuildContext context) {
     return BlocProvider<PriorityBloc>(
       create: (context) => PriorityBloc(initNoteImportance: _noteImportance),
-      child: BlocListener<PriorityBloc, PriorityIndex>(
-        listener: (context, state) {
-          _textEditingListener();
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            toolbarHeight: 70,
-            backgroundColor: const Color(0xff2a5ebc),
-            // elevation: 0,s
-            title: const Text(
-              'Add note',
-              style: TextStyle(
-                  fontSize: 30,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600),
-              textAlign: TextAlign.left,
-            ),
-            actions: [
-              IconButton(
-                  onPressed: () {
-                    // Share.share(sharedNoteContent);
-                  },
-                  icon: const Icon(Icons.share))
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 70,
+          backgroundColor: const Color(0xff2a5ebc),
+          // elevation: 0,s
+          title: const Text(
+            'Add note',
+            style: TextStyle(
+                fontSize: 30, color: Colors.white, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.left,
+          ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  // Share.share(sharedNoteContent);
+                },
+                icon: const Icon(Icons.share))
+          ],
+        ),
+        bottomNavigationBar: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Your note will be saved automatically ',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              Icon(
+                Icons.report,
+                color: Colors.amber,
+              )
             ],
           ),
-          bottomNavigationBar: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Your note will be saved automatically ',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                ),
-                Icon(
-                  Icons.report,
-                  color: Colors.amber,
-                )
-              ],
-            ),
-          ),
-          backgroundColor: const Color(0xffe6e6e6),
-          body: SafeArea(
-            child: FutureBuilder(
-                future: createOrGetExsitingNote(context),
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.done:
-                      _setupTitleControllerListener();
-                      _setupContentControllerListener();
-                      _setupImportanceControllerListener();
-                      return SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            const SizedBox(
-                              height: 10,
+        ),
+        backgroundColor: const Color(0xffe6e6e6),
+        body: SafeArea(
+          child: FutureBuilder(
+              future: createOrGetExsitingNote(context),
+              builder: (context, snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.done:
+                    _setupTitleControllerListener();
+                    _setupContentControllerListener();
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 13),
+                            child: Column(
+                              children: [
+                                Container(
+                                    margin: const EdgeInsets.only(bottom: 13),
+                                    width: double.infinity,
+                                    child: const Text(
+                                      'Note title',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 20,
+                                          color: Color(0xff002240)),
+                                      textAlign: TextAlign.left,
+                                    )),
+                                TextField(
+                                  style: const TextStyle(fontSize: 21),
+                                  cursorColor: const Color(0xff002240),
+                                  controller: _titleController,
+                                  decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            10.0), // Add a border radius
+                                        borderSide:
+                                            BorderSide.none, // Hide the border
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          borderSide: const BorderSide(
+                                              width: 2,
+                                              color: Color(0xff002240)))),
+                                ),
+                                Container(
+                                    margin: const EdgeInsets.only(
+                                        bottom: 13, top: 20),
+                                    width: double.infinity,
+                                    child: const Text(
+                                      'Note body',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 20,
+                                          color: Color(0xff002240)),
+                                      textAlign: TextAlign.left,
+                                    )),
+                                TextField(
+                                  style: const TextStyle(fontSize: 21),
+                                  maxLines: 6,
+                                  cursorColor: const Color(0xff002240),
+                                  controller: _bodyController,
+                                  decoration: InputDecoration(
+                                      hintText:
+                                          'Type your note\'s body here...',
+                                      hintStyle: const TextStyle(
+                                        color: Color(0xaa002240),
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            10.0), // Add a border radius
+                                        borderSide:
+                                            BorderSide.none, // Hide the border
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          borderSide: const BorderSide(
+                                              width: 2,
+                                              color: Color(0xff002240)))),
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                BlocBuilder<PriorityBloc, PriorityIndex>(
+                                  builder: (context, state) {
+                                    return Row(
+                                      children: [
+                                        const Text(
+                                          'Priority',
+                                          style: TextStyle(
+                                              fontSize: 27,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xff002240)),
+                                        ),
+                                        const SizedBox(
+                                          width: 20,
+                                        ),
+                                        InkWell(
+                                            onTap: () {
+                                              _noteImportance =
+                                                  NoteImportance.red;
+                                              context
+                                                  .read<PriorityBloc>()
+                                                  .indexChanger(1);
+                                            },
+                                            child: Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 13,
+                                                  backgroundColor:
+                                                      state.index == 1
+                                                          ? Colors.black
+                                                          : Colors.transparent,
+                                                ),
+                                                const CircleAvatar(
+                                                  radius: 10,
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              ],
+                                            )),
+                                        const SizedBox(
+                                          width: 7,
+                                        ),
+                                        InkWell(
+                                            onTap: () {
+                                              _noteImportance =
+                                                  NoteImportance.orange;
+                                              context
+                                                  .read<PriorityBloc>()
+                                                  .indexChanger(2);
+                                            },
+                                            child: Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 13,
+                                                  backgroundColor:
+                                                      state.index == 2
+                                                          ? Colors.black
+                                                          : Colors.transparent,
+                                                ),
+                                                const CircleAvatar(
+                                                  radius: 10,
+                                                  backgroundColor:
+                                                      Colors.orange,
+                                                ),
+                                              ],
+                                            )),
+                                        const SizedBox(
+                                          width: 7,
+                                        ),
+                                        InkWell(
+                                            onTap: () {
+                                              _noteImportance =
+                                                  NoteImportance.yellow;
+                                              context
+                                                  .read<PriorityBloc>()
+                                                  .indexChanger(3);
+                                            },
+                                            child: Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 13,
+                                                  backgroundColor:
+                                                      state.index == 3
+                                                          ? Colors.black
+                                                          : Colors.transparent,
+                                                ),
+                                                const CircleAvatar(
+                                                  radius: 10,
+                                                  backgroundColor:
+                                                      Colors.yellow,
+                                                ),
+                                              ],
+                                            )),
+                                        const SizedBox(
+                                          width: 7,
+                                        ),
+                                        InkWell(
+                                            onTap: () {
+                                              _noteImportance =
+                                                  NoteImportance.green;
+                                              context
+                                                  .read<PriorityBloc>()
+                                                  .indexChanger(4);
+                                            },
+                                            child: Stack(
+                                              alignment:
+                                                  AlignmentDirectional.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 13,
+                                                  backgroundColor:
+                                                      state.index == 4
+                                                          ? Colors.black
+                                                          : Colors.transparent,
+                                                ),
+                                                const CircleAvatar(
+                                                  radius: 10,
+                                                  backgroundColor: Colors.green,
+                                                ),
+                                              ],
+                                            ))
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 13),
-                              child: Column(
-                                children: [
-                                  Container(
-                                      margin: const EdgeInsets.only(bottom: 13),
-                                      width: double.infinity,
-                                      child: const Text(
-                                        'Note title',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 20,
-                                            color: Color(0xff002240)),
-                                        textAlign: TextAlign.left,
-                                      )),
-                                  TextField(
-                                    style: const TextStyle(fontSize: 21),
-                                    cursorColor: const Color(0xff002240),
-                                    controller: _titleController,
-                                    decoration: InputDecoration(
-                                        filled: true,
-                                        fillColor: Colors.white,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              10.0), // Add a border radius
-                                          borderSide: BorderSide
-                                              .none, // Hide the border
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10.0),
-                                            borderSide: const BorderSide(
-                                                width: 2,
-                                                color: Color(0xff002240)))),
-                                  ),
-                                  Container(
-                                      margin: const EdgeInsets.only(
-                                          bottom: 13, top: 20),
-                                      width: double.infinity,
-                                      child: const Text(
-                                        'Note body',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 20,
-                                            color: Color(0xff002240)),
-                                        textAlign: TextAlign.left,
-                                      )),
-                                  TextField(
-                                    style: const TextStyle(fontSize: 21),
-                                    maxLines: 6,
-                                    cursorColor: const Color(0xff002240),
-                                    controller: _bodyController,
-                                    decoration: InputDecoration(
-                                        hintText:
-                                            'Type your note\'s body here...',
-                                        hintStyle: const TextStyle(
-                                          color: Color(0xaa002240),
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 15,
-                                        ),
-                                        filled: true,
-                                        fillColor: Colors.white,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              10.0), // Add a border radius
-                                          borderSide: BorderSide
-                                              .none, // Hide the border
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10.0),
-                                            borderSide: const BorderSide(
-                                                width: 2,
-                                                color: Color(0xff002240)))),
-                                  ),
-                                  const SizedBox(
-                                    height: 20,
-                                  ),
-                                  BlocBuilder<PriorityBloc, PriorityIndex>(
-                                    builder: (context, state) {
-                                      return Row(
-                                        children: [
-                                          const Text(
-                                            'Priority',
-                                            style: TextStyle(
-                                                fontSize: 27,
-                                                fontWeight: FontWeight.w600,
-                                                color: Color(0xff002240)),
-                                          ),
-                                          const SizedBox(
-                                            width: 20,
-                                          ),
-                                          InkWell(
-                                              onTap: () {
-                                                _noteImportance =
-                                                    NoteImportance.red;
-                                                context
-                                                    .read<PriorityBloc>()
-                                                    .indexChanger(1);
-                                              },
-                                              child: Stack(
-                                                alignment:
-                                                    AlignmentDirectional.center,
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 13,
-                                                    backgroundColor:
-                                                        state.index == 1
-                                                            ? Colors.black
-                                                            : Colors
-                                                                .transparent,
-                                                  ),
-                                                  const CircleAvatar(
-                                                    radius: 10,
-                                                    backgroundColor: Colors.red,
-                                                  ),
-                                                ],
-                                              )),
-                                          const SizedBox(
-                                            width: 7,
-                                          ),
-                                          InkWell(
-                                              onTap: () {
-                                                _noteImportance =
-                                                    NoteImportance.orange;
-                                                context
-                                                    .read<PriorityBloc>()
-                                                    .indexChanger(2);
-                                              },
-                                              child: Stack(
-                                                alignment:
-                                                    AlignmentDirectional.center,
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 13,
-                                                    backgroundColor:
-                                                        state.index == 2
-                                                            ? Colors.black
-                                                            : Colors
-                                                                .transparent,
-                                                  ),
-                                                  const CircleAvatar(
-                                                    radius: 10,
-                                                    backgroundColor:
-                                                        Colors.orange,
-                                                  ),
-                                                ],
-                                              )),
-                                          const SizedBox(
-                                            width: 7,
-                                          ),
-                                          InkWell(
-                                              onTap: () {
-                                                _noteImportance =
-                                                    NoteImportance.yellow;
-                                                context
-                                                    .read<PriorityBloc>()
-                                                    .indexChanger(3);
-                                              },
-                                              child: Stack(
-                                                alignment:
-                                                    AlignmentDirectional.center,
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 13,
-                                                    backgroundColor:
-                                                        state.index == 3
-                                                            ? Colors.black
-                                                            : Colors
-                                                                .transparent,
-                                                  ),
-                                                  const CircleAvatar(
-                                                    radius: 10,
-                                                    backgroundColor:
-                                                        Colors.yellow,
-                                                  ),
-                                                ],
-                                              )),
-                                          const SizedBox(
-                                            width: 7,
-                                          ),
-                                          InkWell(
-                                              onTap: () {
-                                                _noteImportance =
-                                                    NoteImportance.green;
-                                                context
-                                                    .read<PriorityBloc>()
-                                                    .indexChanger(4);
-                                              },
-                                              child: Stack(
-                                                alignment:
-                                                    AlignmentDirectional.center,
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 13,
-                                                    backgroundColor:
-                                                        state.index == 4
-                                                            ? Colors.black
-                                                            : Colors
-                                                                .transparent,
-                                                  ),
-                                                  const CircleAvatar(
-                                                    radius: 10,
-                                                    backgroundColor:
-                                                        Colors.green,
-                                                  ),
-                                                ],
-                                              ))
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    default:
-                      return const CircularProgressIndicator();
-                  }
-                }),
-          ),
+                          ),
+                        ],
+                      ),
+                    );
+                  default:
+                    return const CircularProgressIndicator();
+                }
+              }),
         ),
       ),
     );

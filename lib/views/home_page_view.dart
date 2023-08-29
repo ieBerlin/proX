@@ -1,3 +1,4 @@
+// import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/constants/routes/routes.dart';
@@ -5,10 +6,9 @@ import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/auth/bloc/auth_bloc.dart';
 import 'package:projectx/services/auth/bloc/auth_event.dart';
-import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
+// import 'package:projectx/services/cloud/cloud_services.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
-import 'package:projectx/services/crud/user_notes_databases/userdb.dart';
 import 'package:projectx/utilities/dialogs/logout_dialog.dart';
 import 'package:projectx/views/notes_list_view.dart';
 
@@ -20,14 +20,13 @@ class NoteView extends StatefulWidget {
 }
 
 class _NoteViewState extends State<NoteView> {
-  late final FirebaseCloudStorage _notesService;
-
   late final Services services;
+  // late final CloudServices cloudServices;
   String get emailUser => AuthService.firebase().currentUser!.email;
   @override
   void initState() {
     services = Services();
-    _notesService = FirebaseCloudStorage();
+    // cloudServices = CloudServices();
     super.initState();
   }
 
@@ -81,22 +80,20 @@ class _NoteViewState extends State<NoteView> {
               switch (snapshot.connectionState) {
                 case ConnectionState.done:
                   return StreamBuilder(
-                      stream: _notesService.allNotes(
-                          ownerUserId: (snapshot.data as UserDB).id.toString()),
+                      stream: services.allNotes,
                       builder: ((context, snapshot) {
                         switch (snapshot.connectionState) {
                           case ConnectionState.waiting:
                           case ConnectionState.active:
-                            if (snapshot.hasData) {
-                              final allNotes =
-                                  snapshot.data as Iterable<NoteDB>;
+                            // log(cloudServices.cloudNotes.toString());
+                            if (snapshot.hasData &&
+                                snapshot.data!.toList().isNotEmpty) {
+                              final allNotes = snapshot.data as List<NoteDB>;
                               return NotesListView(
                                 notes: allNotes,
                                 onDeleteNote: (note) async {
                                   await services.deleteNote(
                                       noteId: note.noteId);
-                                  await _notesService.deleteCloudNote(
-                                      documentId: note.documentId);
                                 },
                                 onTap: (note) {
                                   Navigator.of(context).pushNamed(
@@ -106,11 +103,6 @@ class _NoteViewState extends State<NoteView> {
                                 },
                                 services: services,
                               );
-                              //   default:
-                              //     return const CircularProgressIndicator();
-                              // }
-                              // },
-                              // );
                             } else {
                               return const Text('No data to display');
                             }
@@ -123,5 +115,14 @@ class _NoteViewState extends State<NoteView> {
                   return const CircularProgressIndicator();
               }
             })));
+  }
+
+  Future<void> checkTheEmptyNotes(List<NoteDB> myList) async {
+    final allNotes = myList;
+    for (final i in allNotes) {
+      if (i.title == '' || i.content == '') {
+        await services.deleteNote(noteId: i.noteId);
+      }
+    }
   }
 }

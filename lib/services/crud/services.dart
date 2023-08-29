@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/constants/db_constants/constants.dart';
 import 'package:projectx/extentions/list/filter.dart';
 import 'package:projectx/services/auth/auth_exceptions.dart';
 import 'package:projectx/services/auth/auth_service.dart';
+import 'package:projectx/services/cloud/cloud_services.dart';
 import 'package:sqflite/sqflite.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path/path.dart' show join;
@@ -16,17 +16,22 @@ import 'user_notes_databases/userdb.dart';
 class UserShouldBeSetBeforeReadingAllNotes implements Exception {}
 
 class Services {
+  String get email => AuthService.firebase().currentUser!.email;
   static final Services _shared = Services._sharedInstance();
   factory Services() => _shared;
   Database? _db;
   List<NoteDB> _notes = [];
   UserDB? _user;
+  late final StreamController<List<NoteDB>> _notesStreamController;
+
   Services._sharedInstance() {
     _notesStreamController =
         StreamController<List<NoteDB>>.broadcast(onListen: () {
       _notesStreamController.sink.add(_notes);
     });
   }
+
+  CloudServices cloudServicesInstance = CloudServices();
   Stream<List<NoteDB>> get allNotes =>
       _notesStreamController.stream.filter((note) {
         final currentUser = _user;
@@ -36,9 +41,6 @@ class Services {
           throw UserShouldBeSetBeforeReadingAllNotes();
         }
       });
-
-  String get email => AuthService.firebase().currentUser!.email;
-  late final StreamController<List<NoteDB>> _notesStreamController;
 
   Future<void> _cacheNotes() async {
     final allNote = await getAllNotesOfAllUsers();
@@ -146,33 +148,39 @@ class Services {
     }
   }
 
-  Future<NoteDB> createNote(
-      {required String title,
-      required String content,
-      required NoteImportance importance,
-      required UserDB owner,
-      required bool isSyncedInFirestoreDb}) async {
+  Future<NoteDB> createNote({
+    required String title,
+    required String content,
+    required NoteImportance importance,
+    required UserDB owner,
+  }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
+    // final user =
     await getUser(email: owner.email);
-    final localNoteId = await db.insert(noteTable, {
+    // if (user != owner) {
+    //   throw CouldNotFineTheUser();
+    // }
+
+    final noteId = await db.insert(noteTable, {
       idColumn: owner.id,
       titleColumn: title,
       contentColumn: content,
       importanceColumn: enumToString(importance),
-      isSyncedColumn: isSyncedInFirestoreDb == false ? 'false' : 'true',
+      isSyncedColumn: 'false',
     });
     final note = NoteDB(
-      id: owner.id,
-      noteId: localNoteId,
-      documentId: '',
-      title: title,
-      content: content,
-      importance: importance,
-      isSyncedInFirestoreDb: false,
-    );
+        noteId: noteId,
+        id: owner.id,
+        title: title,
+        content: content,
+        importance: importance,
+        isSynced: 'false');
+
     _notes.add(note);
+    cloudServicesInstance.cloudNotes.add(note);
     _notesStreamController.add(_notes);
+    cloudServicesInstance.cloudNotesStreamController.add(_notes);
     return note;
   }
 
@@ -188,7 +196,11 @@ class Services {
       throw CouldNotDeleteNote();
     } else {
       _notes.removeWhere((note) => note.noteId == noteId);
+      cloudServicesInstance.cloudNotes
+          .removeWhere((note) => note.noteId == noteId);
       _notesStreamController.add(_notes);
+
+      cloudServicesInstance.cloudNotesStreamController.add(_notes);
     }
   }
 
@@ -205,8 +217,9 @@ class Services {
       throw CouldNotDeleteAllNotesOfProvidedEmailUser();
     } else {
       _notes = [];
+      cloudServicesInstance.cloudNotes = [];
       _notesStreamController.add(_notes);
-      ('All notes of provided user, have been deleted successefully');
+      cloudServicesInstance.cloudNotesStreamController.add(_notes);
       return result;
     }
   }
@@ -219,8 +232,9 @@ class Services {
       throw CouldNotDeleteAllNotesOfAllUsers();
     } else {
       _notes = [];
+      cloudServicesInstance.cloudNotes = [];
       _notesStreamController.add(_notes);
-      ('All notes have been deleted successefully');
+      cloudServicesInstance.cloudNotesStreamController.add(_notes);
     }
   }
 
@@ -249,8 +263,12 @@ class Services {
     } else {
       final updatedNote = await getNote(noteId: noteId);
       _notes.removeWhere((note) => updatedNote.noteId == note.noteId);
+      cloudServicesInstance.cloudNotes
+          .removeWhere((note) => updatedNote.noteId == note.noteId);
       _notes.add(updatedNote);
+      cloudServicesInstance.cloudNotes.add(updatedNote);
       _notesStreamController.add(_notes);
+      cloudServicesInstance.cloudNotesStreamController.add(_notes);
       return updatedNote;
     }
   }
@@ -298,8 +316,9 @@ class Services {
     } else {
       final fetchedNote = note[0];
       _notes.removeWhere((note) => noteId == note.noteId);
-      log(fetchedNote.toString());
 
+      /// error
+      /// covertingQueryRowToANoteDbObject
       _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values.toList()));
       _notesStreamController.add(_notes);
       return covertingQueryRowToANoteDbObject(fetchedNote.values.toList());

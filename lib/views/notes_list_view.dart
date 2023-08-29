@@ -7,7 +7,7 @@ import 'package:projectx/utilities/dialogs/delete_dialog.dart';
 typedef NoteCallBack = void Function(NoteDB note);
 
 class NotesListView extends StatelessWidget {
-  final Iterable<NoteDB> notes;
+  final List<NoteDB> notes;
   final NoteCallBack onDeleteNote;
   final NoteCallBack onTap;
   const NotesListView({
@@ -29,7 +29,7 @@ class NotesListView extends StatelessWidget {
         ),
         itemCount: notes.toList().length,
         itemBuilder: ((context, index) {
-          final note = notes.elementAt(index);
+          final note = notes[index];
           return InkWell(
               onTap: () {
                 onTap(note);
@@ -54,9 +54,8 @@ class NotesListView extends StatelessWidget {
                                 final shouldDelete =
                                     await showDeleteDialog(context);
                                 if (shouldDelete) {
-                                  if (shouldDelete) {
-                                    onDeleteNote(note);
-                                  }
+                                  await services.deleteNote(
+                                      noteId: note.noteId);
                                 }
                               },
                               icon: const Icon(
