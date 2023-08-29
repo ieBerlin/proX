@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/constants/db_constants/constants.dart';
 import 'package:projectx/extentions/list/filter.dart';
@@ -145,32 +146,30 @@ class Services {
     }
   }
 
-  Future<NoteDB> createNote({
-    required String title,
-    required String content,
-    required NoteImportance importance,
-    required UserDB owner,
-  }) async {
+  Future<NoteDB> createNote(
+      {required String title,
+      required String content,
+      required NoteImportance importance,
+      required UserDB owner,
+      required bool isSyncedInFirestoreDb}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    // final user =
     await getUser(email: owner.email);
-    // if (user != owner) {
-    //   throw CouldNotFineTheUser();
-    // }
-
-    final noteId = await db.insert(noteTable, {
+    final localNoteId = await db.insert(noteTable, {
       idColumn: owner.id,
       titleColumn: title,
       contentColumn: content,
       importanceColumn: enumToString(importance),
+      isSyncedColumn: isSyncedInFirestoreDb == false ? 'false' : 'true',
     });
     final note = NoteDB(
-      noteId: noteId,
       id: owner.id,
+      noteId: localNoteId,
+      documentId: '',
       title: title,
       content: content,
       importance: importance,
+      isSyncedInFirestoreDb: false,
     );
     _notes.add(note);
     _notesStreamController.add(_notes);
@@ -188,13 +187,8 @@ class Services {
     if (result == 0) {
       throw CouldNotDeleteNote();
     } else {
-      // final countBefore = _notes.length;
-
       _notes.removeWhere((note) => note.noteId == noteId);
-      // if (_notes.length != countBefore) {
       _notesStreamController.add(_notes);
-      ('Note has been deleted successefully');
-      // }
     }
   }
 
@@ -304,9 +298,8 @@ class Services {
     } else {
       final fetchedNote = note[0];
       _notes.removeWhere((note) => noteId == note.noteId);
+      log(fetchedNote.toString());
 
-      /// error
-      /// covertingQueryRowToANoteDbObject
       _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values.toList()));
       _notesStreamController.add(_notes);
       return covertingQueryRowToANoteDbObject(fetchedNote.values.toList());
