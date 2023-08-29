@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/bloc/bloc.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
+import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
@@ -20,6 +21,7 @@ class _NoteListViewState extends State<NoteListView> {
 
   NoteDB? _note;
   final Services _services = Services();
+  final FirebaseCloudStorage _cloudServices = FirebaseCloudStorage();
   late final TextEditingController _titleController;
   late final TextEditingController _bodyController;
   late String sharedNoteContent =
@@ -51,11 +53,12 @@ class _NoteListViewState extends State<NoteListView> {
     }
   }
 
-  void _deleteNoteIfTextEmpty() {
+  void _deleteNoteIfTextEmpty() async {
     final note = _note;
     if ((_titleController.text.isEmpty || _bodyController.text.isEmpty) &&
         note != null) {
-      _services.deleteNote(noteId: note.noteId);
+      await _services.deleteNote(noteId: note.noteId);
+      await _cloudServices.deleteNote(documentId: note.documentId);
     }
   }
 

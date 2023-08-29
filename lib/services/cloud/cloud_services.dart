@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
@@ -37,6 +38,7 @@ class CloudServices {
     final notes = await getAllUnSyncedNotes();
     final owner = FirebaseAuth.instance.currentUser;
     for (var i in notes) {
+      log(i.toString());
       if (i.isSynced == 'false') {
         final note =
             await firebaseCloudStorage.createCloudNote(ownerUserId: owner!.uid);

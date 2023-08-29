@@ -314,6 +314,24 @@ class Services {
     return returnedNotes;
   }
 
+  Future<NoteDB> getNoteForCloud({required String documentId}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final note = await db.query(
+      noteTable,
+      limit: 1,
+      where: 'documentId = ?',
+      whereArgs: [documentId],
+    );
+    if (note.isEmpty) {
+      throw CouldNotFindTheNote();
+    } else {
+      final fetchedNote = note[0];
+      _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values.toList()));
+      return covertingQueryRowToANoteDbObject(fetchedNote.values.toList());
+    }
+  }
+
   Future<NoteDB> getNote({required int noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
