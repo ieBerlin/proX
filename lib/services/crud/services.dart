@@ -45,6 +45,7 @@ class Services {
   Future<void> _cacheNotes() async {
     final allNote = await getAllNotesOfAllUsers();
     _notes = allNote.toList();
+    cloudServicesInstance.cloudNotes = allNote.toList();
     _notesStreamController.add(_notes);
   }
 
@@ -168,14 +169,19 @@ class Services {
       contentColumn: content,
       importanceColumn: enumToString(importance),
       isSyncedColumn: 'false',
+      isUpdatedColumn: 'false',
+      documentIdColumn: 'DEFAULT_NULL',
     });
     final note = NoteDB(
-        noteId: noteId,
-        id: owner.id,
-        title: title,
-        content: content,
-        importance: importance,
-        isSynced: 'false');
+      noteId: noteId,
+      id: owner.id,
+      title: title,
+      content: content,
+      importance: importance,
+      isSynced: 'false',
+      isUpdated: 'false',
+      documentId: 'DEFAULT_NULL',
+    );
 
     _notes.add(note);
     cloudServicesInstance.cloudNotes.add(note);
@@ -243,6 +249,9 @@ class Services {
     required String title,
     required String content,
     required NoteImportance importance,
+    required String isSynced,
+    required String isUpdated,
+    required String documentId,
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
@@ -254,6 +263,9 @@ class Services {
         titleColumn: title,
         contentColumn: content,
         importanceColumn: enumToString(importance),
+        isSyncedColumn: isSynced,
+        isUpdatedColumn: isUpdated,
+        documentIdColumn: documentId,
       },
       where: 'noteId = ?',
       whereArgs: [noteId],

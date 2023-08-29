@@ -72,6 +72,9 @@ class _NoteListViewState extends State<NoteListView> {
         title: title,
         content: content,
         importance: importance,
+        isSynced: note.isSynced,
+        isUpdated: note.isUpdated,
+        documentId: note.documentId,
       );
     }
   }
@@ -84,12 +87,17 @@ class _NoteListViewState extends State<NoteListView> {
     final title = _titleController.text;
     final content = _bodyController.text;
     final importance = _noteImportance;
+    final isSynced = note.isSynced;
+    final isUpdated = note.isUpdated;
 
     await _services.updateNote(
       noteId: note.noteId,
       title: title,
       content: content,
       importance: importance,
+      isSynced: isSynced,
+      isUpdated: isUpdated,
+      documentId: note.documentId,
     );
   }
 

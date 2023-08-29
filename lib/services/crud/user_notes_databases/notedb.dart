@@ -8,6 +8,8 @@ class NoteDB {
   final String content;
   final NoteImportance importance;
   final String isSynced;
+  final String isUpdated;
+  final String documentId;
 
   NoteDB({
     required this.noteId,
@@ -16,6 +18,8 @@ class NoteDB {
     required this.content,
     required this.importance,
     required this.isSynced,
+    required this.isUpdated,
+    required this.documentId,
   });
 
   NoteDB.fromRow(Map<String, Object?> map)
@@ -24,11 +28,13 @@ class NoteDB {
         title = map[titleColumn] as String,
         content = map[contentColumn] as String,
         importance = map[importanceColumn] as NoteImportance,
-        isSynced = map[isSyncedColumn] as String;
+        isSynced = map[isSyncedColumn] as String,
+        isUpdated = map[isUpdatedColumn] as String,
+        documentId = map[documentIdColumn] as String;
 
   @override
   String toString() =>
-      'noteId : $noteId, id : $id, title : $title, content : $content, importance : $importance, is synced  : $isSynced';
+      'noteId : $noteId, id : $id, title : $title, content : $content, importance : $importance, is synced  : $isSynced, is Updated : $isUpdated, documentId : $documentId';
 
   @override
   bool operator ==(covariant NoteDB other) => noteId == other.noteId;
@@ -41,10 +47,13 @@ NoteDB covertingQueryRowToANoteDbObject(
   List myValues,
 ) {
   return NoteDB(
-      noteId: myValues[0],
-      id: myValues[1],
-      title: myValues[2],
-      content: myValues[3],
-      importance: stringToEnums(myValues[4]),
-      isSynced: myValues[5]);
+    noteId: myValues[0],
+    id: myValues[1],
+    title: myValues[2],
+    content: myValues[3],
+    importance: stringToEnums(myValues[4]),
+    isSynced: myValues[5],
+    isUpdated: myValues[6],
+    documentId: myValues[7],
+  );
 }
