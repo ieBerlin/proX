@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/constants/db_constants/constants.dart';
 import 'package:projectx/extentions/list/filter.dart';
 import 'package:projectx/services/auth/auth_exceptions.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/cloud/cloud_services.dart';
+import 'package:projectx/services/cloud/upload_note.dart';
 import 'package:sqflite/sqflite.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path/path.dart' show join;
@@ -17,6 +21,8 @@ class UserShouldBeSetBeforeReadingAllNotes implements Exception {}
 
 class Services {
   String get email => AuthService.firebase().currentUser!.email;
+  String get userUId => FirebaseAuth.instance.currentUser!.uid;
+
   static final Services _shared = Services._sharedInstance();
   factory Services() => _shared;
   Database? _db;
@@ -49,6 +55,30 @@ class Services {
     _notesStreamController.add(_notes);
   }
 
+  Future<void> prepareNoteToUploadWhileUserIsOnline(
+      {required int noteId,
+      required String action,
+      required String userId}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+
+    final noteActionId = await db.insert(noteActionTable, {
+      noteIdActionColumn: noteId,
+      actionActionColumn: action,
+      userIdActionColumn: userId,
+    });
+
+    cloudServicesInstance.cloudNotes.add(noteActionId);
+    cloudServicesInstance.cloudNotesStreamController.add(_notes);
+  }
+
+  Future<Iterable<UploadNote>> getAllNotesThatShoudlUploaded() async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final notes = await db.query(noteActionTable);
+    return notes.map((note) => UploadNote.fromRow(note));
+  }
+
   Future<void> openDb() async {
     if (_db != null) {
       throw DatabaseIsAlreadyOpenedException();
@@ -60,6 +90,7 @@ class Services {
       _db = db;
       await db.execute(createUserTableSql);
       await db.execute(createNoteTableSql);
+      await db.execute(noteActionTableSql);
       await _cacheNotes();
     } catch (e) {
       throw GenericExceptionExceptionForCRUD();
@@ -126,7 +157,6 @@ class Services {
 
   Future<UserDB> getUser({required String email}) async {
     await ensureOpeningDb();
-
     try {
       final db = getDbOrThrow();
       final userResults = await db.query(
@@ -157,12 +187,7 @@ class Services {
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    // final user =
     await getUser(email: owner.email);
-    // if (user != owner) {
-    //   throw CouldNotFineTheUser();
-    // }
-
     final noteId = await db.insert(noteTable, {
       idColumn: owner.id,
       titleColumn: title,
@@ -182,7 +207,11 @@ class Services {
       isUpdated: 'false',
       documentId: 'DEFAULT_NULL',
     );
-
+    await prepareNoteToUploadWhileUserIsOnline(
+      noteId: noteId,
+      action: 'CREATE',
+      userId: userUId,
+    );
     _notes.add(note);
     cloudServicesInstance.cloudNotes.add(note);
     _notesStreamController.add(_notes);
@@ -191,6 +220,7 @@ class Services {
   }
 
   Future<void> deleteNote({required int noteId}) async {
+    log(noteId.toString());
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final result = await db.delete(
@@ -201,11 +231,15 @@ class Services {
     if (result == 0) {
       throw CouldNotDeleteNote();
     } else {
+      await prepareNoteToUploadWhileUserIsOnline(
+        noteId: noteId,
+        action: 'DELETE',
+        userId: userUId,
+      );
       _notes.removeWhere((note) => note.noteId == noteId);
       cloudServicesInstance.cloudNotes
           .removeWhere((note) => note.noteId == noteId);
       _notesStreamController.add(_notes);
-
       cloudServicesInstance.cloudNotesStreamController.add(_notes);
     }
   }
@@ -273,6 +307,11 @@ class Services {
     if (note == 0) {
       throw CouldNotUpdateNote();
     } else {
+      await prepareNoteToUploadWhileUserIsOnline(
+        noteId: noteId,
+        action: 'UPDATE',
+        userId: userUId,
+      );
       final updatedNote = await getNote(noteId: noteId);
       _notes.removeWhere((note) => updatedNote.noteId == note.noteId);
       cloudServicesInstance.cloudNotes
