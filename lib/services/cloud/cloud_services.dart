@@ -22,6 +22,7 @@ class CloudServices {
   factory CloudServices() => _shared;
   Future<List<NoteDB>> getAllUnSyncedNotes() async {
     List<NoteDB> unSyncedNotes = [];
+    log(unSyncedNotes.length.toString());
     cloudNotes = await Services().getAllNotesOfAllUsers();
     for (var i in cloudNotes) {
       if (i.isSynced == 'false' || i.isUpdated == 'false') {
@@ -31,6 +32,7 @@ class CloudServices {
     cloudNotes = [];
     cloudNotes = unSyncedNotes;
     cloudNotesStreamController.add(cloudNotes);
+    print(cloudNotes.length.toString());
     return cloudNotes;
   }
 
@@ -38,7 +40,6 @@ class CloudServices {
     final notes = await getAllUnSyncedNotes();
     final owner = FirebaseAuth.instance.currentUser;
     for (var i in notes) {
-      log(i.toString());
       if (i.isSynced == 'false') {
         final note =
             await firebaseCloudStorage.createCloudNote(ownerUserId: owner!.uid);

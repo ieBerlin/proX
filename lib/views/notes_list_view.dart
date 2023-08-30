@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:projectx/enums/methods.dart';
+import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
 import 'package:projectx/services/crud/services.dart';
 import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
 import 'package:projectx/utilities/dialogs/delete_dialog.dart';
@@ -22,6 +25,8 @@ class NotesListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
+    final FirebaseCloudStorage _notesService = FirebaseCloudStorage();
+
     return GridView.builder(
         physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -54,8 +59,11 @@ class NotesListView extends StatelessWidget {
                                 final shouldDelete =
                                     await showDeleteDialog(context);
                                 if (shouldDelete) {
+                                  log(note.documentId);
                                   await services.deleteNote(
                                       noteId: note.noteId);
+                                  await _notesService.deleteNote(
+                                      documentId: note.documentId);
                                 }
                               },
                               icon: const Icon(

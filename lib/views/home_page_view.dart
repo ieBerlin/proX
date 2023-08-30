@@ -1,4 +1,5 @@
 import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,11 +32,19 @@ class _NoteViewState extends State<NoteView> {
   Iterable<CloudNote> fetchedNotes = [];
   var allNotes;
 
+  // Stream<List<NoteDB>> recoverAllNotes() async* {
+  //   final allNotes = _notesService.allNotes as List<NoteDB>;
+  //   log('---');
+  //   log(allNotes.length.toString());
+  //   yield allNotes;
+  // }
+
   @override
   void initState() {
     services = Services();
     cloudServices = CloudServices();
     _notesService = FirebaseCloudStorage();
+    // recoverAllNotes();
     super.initState();
   }
 
@@ -83,42 +92,43 @@ class _NoteViewState extends State<NoteView> {
             ),
           ],
         ),
-        body: FutureBuilder(
-            future: services.getOrCreateUser(email: emailUser),
+        body: StreamBuilder(
+            stream: _notesService.allNotes(ownerUserId: userId),
             builder: ((context, snapshot) {
+              log(cloudServices.cloudNotes.length.toString());
               switch (snapshot.connectionState) {
-                case ConnectionState.done:
-                  return FutureBuilder(
-                    future: cloudServices.createOrUpdatedCloudNote(),
-                    builder: (context, snapshot) {
-                      return StreamBuilder(
-                        stream: _notesService.allNotes(ownerUserId: userId),
+                case ConnectionState.waiting:
+                case ConnectionState.active:
+                  if (snapshot.hasData && snapshot.data!.toList().isNotEmpty) {
+                    allNotes = snapshot.data as Iterable<CloudNote>;
+                    Future<List<NoteDB>> transformedDataFuture = _notesService
+                        .iterableOfCloudNoteToNoteDB(localNotes: allNotes);
+                    return FutureBuilder(
+                        future: transformedDataFuture,
                         builder: (context, snapshot) {
                           switch (snapshot.connectionState) {
                             case ConnectionState.waiting:
-                            case ConnectionState.active:
-                              if (snapshot.hasData) {
-                                fetchedNotes =
-                                    snapshot.data as Iterable<CloudNote>;
-                                log(fetchedNotes.length.toString());
-                              }
+                              return const CircularProgressIndicator();
+                            default:
+                              if (snapshot.hasData &&
+                                  snapshot.data!.toList().isNotEmpty) {
+                                allNotes = snapshot.data as List<NoteDB>;
+                                return StreamBuilder(
+                                    stream: services.allNotes,
+                                    builder: (context, snapshot) {
+                                      switch (snapshot.connectionState) {
+                                        case ConnectionState.waiting:
+                                        case ConnectionState.active:
+                                          late List<NoteDB> notes;
+                                          if (snapshot.hasData) {
+                                            notes = allNotes +
+                                                (snapshot.data as List<NoteDB>);
+                                          } else {
+                                            notes = allNotes;
+                                          }
 
-                              return StreamBuilder(
-                                  stream: services.allNotes,
-                                  builder: ((context, snapshot) {
-                                    switch (snapshot.connectionState) {
-                                      case ConnectionState.waiting:
-                                      case ConnectionState.active:
-                                        if (snapshot.hasData &&
-                                            snapshot.data!
-                                                .toList()
-                                                .isNotEmpty) {
-                                          allNotes =
-                                              snapshot.data as List<NoteDB>;
-                                          // allNotes =LL
-                                          //     allNotes + cloud.toList();
                                           return NotesListView(
-                                            notes: allNotes,
+                                            notes: notes,
                                             onDeleteNote: (note) async {
                                               await services.deleteNote(
                                                   noteId: note.noteId);
@@ -133,27 +143,110 @@ class _NoteViewState extends State<NoteView> {
                                             },
                                             services: services,
                                           );
-                                        } else {
-                                          return const Text(
-                                              'No data to display');
-                                        }
-                                      default:
-                                        return const CircularProgressIndicator();
-                                    }
-                                  }));
-                            default:
-                              return const CircularProgressIndicator();
+
+                                        default:
+                                          return const CircularProgressIndicator();
+                                      }
+                                    });
+                              } else {
+                                return const Text('no data to display');
+                              }
                           }
-                        },
-                      );
-
-                      // }
-                    },
-                  );
-
+                        });
+                  } else {
+                    return const Text('Waitting for your notes');
+                  }
                 default:
                   return const CircularProgressIndicator();
               }
             })));
   }
 }
+
+
+
+//  FutureBuilder(
+//             future: services.getOrCreateUser(email: emailUser),
+//             builder: ((context, snapshot) {
+//               switch (snapshot.connectionState) {
+//                 case ConnectionState.done:
+//                   return FutureBuilder(
+                    // future: cloudServices.createOrUpdatedCloudNote(),
+//                     builder: (context, snapshot) {
+//                       return StreamBuilder(
+//                         stream: _notesService.allNotes(ownerUserId: userId),
+//                         builder: (context, snapshot) {
+//                           switch (snapshot.connectionState) {
+//                             case ConnectionState.waiting:
+//                             case ConnectionState.active:
+//                               // if (snapshot.hasData) {
+//                               //   fetchedNotes =
+//                               //       snapshot.data as Iterable<CloudNote>;
+//                               // }
+
+//                               // return FutureBuilder(
+//                               //   future:
+//                               //       _notesService.iterableOfCloudNoteToNoteDB(
+//                               //           localNotes: fetchedNotes),
+//                               //   builder: (context, snapshot) {
+//                               //     switch (snapshot.connectionState) {
+//                               //       case ConnectionState.done:
+//                               return StreamBuilder(
+//                                   stream: services.allNotes,
+//                                   builder: ((context, snapshot) {
+//                                     switch (snapshot.connectionState) {
+//                                       case ConnectionState.waiting:
+//                                       case ConnectionState.active:
+//                                         if (snapshot.hasData &&
+//                                             snapshot.data!
+//                                                 .toList()
+//                                                 .isNotEmpty) {
+//                                           allNotes =
+//                                               snapshot.data as List<NoteDB>;
+//                                           // allNotes =LL
+//                                           //     allNotes + cloud.toList();
+//                                           return NotesListView(
+//                                             notes: allNotes,
+//                                             onDeleteNote: (note) async {
+//                                               await services.deleteNote(
+//                                                   noteId: note.noteId);
+//                                               await _notesService.deleteNote(
+//                                                   documentId: note.documentId);
+//                                             },
+//                                             onTap: (note) {
+//                                               Navigator.of(context).pushNamed(
+//                                                 createOrUpdateNoteRoute,
+//                                                 arguments: note,
+//                                               );
+//                                             },
+//                                             services: services,
+//                                           );
+//                                         } else {
+//                                           return const Text(
+//                                               'No data to display');
+//                                         }
+//                                       default:
+//                                         return const CircularProgressIndicator();
+//                                     }
+//                                   }));
+
+//                             //   default:
+//                             //     return const CircularProgressIndicator();
+//                             // }
+//                             // },
+//                             // );
+
+//                             default:
+//                               return const CircularProgressIndicator();
+//                           }
+//                         },
+//                       );
+
+//                       // }
+//                     },
+//                   );
+
+//                 default:
+//                   return const CircularProgressIndicator();
+//               }
+//             }))
