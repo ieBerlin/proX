@@ -25,6 +25,6 @@ class CloudNote {
         documentId = snapshot.id;
   @override
   String toString() {
-    return 'userid : $userId,  $title,documentid :$documentId';
+    return 'userid : $userId, title ;  $title,documentid :$documentId content : $content, importance : $importance';
   }
 }

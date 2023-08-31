@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/constants/db_constants/constants.dart';
@@ -55,6 +54,26 @@ class Services {
     _notesStreamController.add(_notes);
   }
 
+  Future<void> deleteNoteFromAction({required int noteId}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final result = await db.delete(
+      noteActionTable,
+      where: 'noteId = ?',
+      whereArgs: [noteId],
+    );
+    if (result == 0) {
+      throw CouldNotDeleteNote();
+    } else {
+      //pas sure
+      _notes.removeWhere((note) => note.noteId == noteId);
+      cloudServicesInstance.cloudNotes
+          .removeWhere((note) => note.noteId == noteId);
+      _notesStreamController.add(_notes);
+      cloudServicesInstance.cloudNotesStreamController.add(_notes);
+    }
+  }
+
   Future<void> prepareNoteToUploadWhileUserIsOnline(
       {required int noteId,
       required String action,
@@ -67,8 +86,8 @@ class Services {
       actionActionColumn: action,
       userIdActionColumn: userId,
     });
-
-    cloudServicesInstance.cloudNotes.add(noteActionId);
+    final note = await getNote(noteId: noteActionId);
+    cloudServicesInstance.cloudNotes.add(note);
     cloudServicesInstance.cloudNotesStreamController.add(_notes);
   }
 
@@ -179,7 +198,8 @@ class Services {
     }
   }
 
-  Future<NoteDB> createNote({
+  Future<NoteDB> createNote(
+    String? documentId, {
     required String title,
     required String content,
     required NoteImportance importance,
@@ -193,9 +213,7 @@ class Services {
       titleColumn: title,
       contentColumn: content,
       importanceColumn: enumToString(importance),
-      isSyncedColumn: 'false',
-      isUpdatedColumn: 'false',
-      documentIdColumn: 'DEFAULT_NULL',
+      documentIdColumn: documentId ?? 'DEFAULT_NULL',
     });
     final note = NoteDB(
       noteId: noteId,
@@ -203,24 +221,21 @@ class Services {
       title: title,
       content: content,
       importance: importance,
-      isSynced: 'false',
-      isUpdated: 'false',
-      documentId: 'DEFAULT_NULL',
+      documentId: documentId ?? 'DEFAULT_NULL',
     );
-    await prepareNoteToUploadWhileUserIsOnline(
-      noteId: noteId,
-      action: 'CREATE',
-      userId: userUId,
-    );
+    // await prepareNoteToUploadWhileUserIsOnline(
+    //   noteId: noteId,
+    //   action: 'CREATE',
+    //   userId: userUId,
+    // );
     _notes.add(note);
-    cloudServicesInstance.cloudNotes.add(note);
+    // cloudServicesInstance.cloudNotes.add(note);
     _notesStreamController.add(_notes);
-    cloudServicesInstance.cloudNotesStreamController.add(_notes);
+    // cloudServicesInstance.cloudNotesStreamController.add(_notes);
     return note;
   }
 
   Future<void> deleteNote({required int noteId}) async {
-    log(noteId.toString());
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final result = await db.delete(
@@ -241,6 +256,24 @@ class Services {
           .removeWhere((note) => note.noteId == noteId);
       _notesStreamController.add(_notes);
       cloudServicesInstance.cloudNotesStreamController.add(_notes);
+    }
+  }
+// NoteDB.convertingQueryRowToNoteObjecy(Map<String, Object?> map):
+
+  Future<int> getNoteOnDocumentId({required String documentId}) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final notes = await db.query(
+      noteTable,
+      where: 'documentId = ?',
+      whereArgs: [documentId],
+    );
+
+    if (notes.isEmpty) {
+      throw CouldNotFindTheNote();
+    } else {
+      final note = covertingQueryRowToANoteDbObject(notes);
+      return note.noteId;
     }
   }
 
@@ -283,8 +316,6 @@ class Services {
     required String title,
     required String content,
     required NoteImportance importance,
-    required String isSynced,
-    required String isUpdated,
     required String documentId,
   }) async {
     await ensureOpeningDb();
@@ -297,8 +328,6 @@ class Services {
         titleColumn: title,
         contentColumn: content,
         importanceColumn: enumToString(importance),
-        isSyncedColumn: isSynced,
-        isUpdatedColumn: isUpdated,
         documentIdColumn: documentId,
       },
       where: 'noteId = ?',
@@ -331,7 +360,7 @@ class Services {
     final notes = await db.query(noteTable);
 
     for (final i in notes) {
-      returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
+      returnedNotes.add(covertingQueryRowToANoteDbObject(i.values));
     }
     return returnedNotes;
   }
@@ -346,7 +375,7 @@ class Services {
       throw CouldNotFindTheAtLeastOneNote();
     } else {
       for (final i in notes) {
-        returnedNotes.add(covertingQueryRowToANoteDbObject(i.values.toList()));
+        returnedNotes.add(covertingQueryRowToANoteDbObject(i.values));
       }
       (returnedNotes.toString());
     }
@@ -366,8 +395,8 @@ class Services {
       throw CouldNotFindTheNote();
     } else {
       final fetchedNote = note[0];
-      _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values.toList()));
-      return covertingQueryRowToANoteDbObject(fetchedNote.values.toList());
+      _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values));
+      return covertingQueryRowToANoteDbObject(fetchedNote.values);
     }
   }
 
@@ -380,17 +409,16 @@ class Services {
       where: 'noteId = ?',
       whereArgs: [noteId],
     );
+    log(noteId.toString());
     if (note.isEmpty) {
       throw CouldNotFindTheNote();
     } else {
       final fetchedNote = note[0];
       _notes.removeWhere((note) => noteId == note.noteId);
 
-      /// error
-      /// covertingQueryRowToANoteDbObject
-      _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values.toList()));
+      _notes.add(covertingQueryRowToANoteDbObject(fetchedNote.values));
       _notesStreamController.add(_notes);
-      return covertingQueryRowToANoteDbObject(fetchedNote.values.toList());
+      return covertingQueryRowToANoteDbObject(fetchedNote.values);
     }
   }
 

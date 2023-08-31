@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/bloc/bloc.dart';
@@ -43,6 +45,7 @@ class _NoteListViewState extends State<NoteListView> {
       final email = currentUser!.email;
       final owner = await _services.getUser(email: email);
       final newNote = await _services.createNote(
+        null,
         title: _titleController.text,
         content: _bodyController.text,
         importance: _noteImportance,
@@ -58,7 +61,10 @@ class _NoteListViewState extends State<NoteListView> {
     if ((_titleController.text.isEmpty || _bodyController.text.isEmpty) &&
         note != null) {
       await _services.deleteNote(noteId: note.noteId);
-      await _cloudServices.deleteNote(documentId: note.documentId);
+      await _cloudServices.deleteNote(
+        documentId: note.documentId,
+        noteId: note.noteId,
+      );
     }
   }
 
@@ -75,8 +81,6 @@ class _NoteListViewState extends State<NoteListView> {
         title: title,
         content: content,
         importance: importance,
-        isSynced: note.isSynced,
-        isUpdated: note.isUpdated,
         documentId: note.documentId,
       );
     }
@@ -90,16 +94,12 @@ class _NoteListViewState extends State<NoteListView> {
     final title = _titleController.text;
     final content = _bodyController.text;
     final importance = _noteImportance;
-    final isSynced = note.isSynced;
-    final isUpdated = note.isUpdated;
-
+    log(note.toString());
     await _services.updateNote(
       noteId: note.noteId,
       title: title,
       content: content,
       importance: importance,
-      isSynced: isSynced,
-      isUpdated: isUpdated,
       documentId: note.documentId,
     );
   }

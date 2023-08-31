@@ -1,6 +1,4 @@
 const idColumn = 'id';
-const isSyncedColumn = 'isSynced';
-const isUpdatedColumn = 'isUpdated';
 const documentIdColumn = 'documentId';
 const emailColumn = 'email';
 const noteIdColumn = 'note_id';
@@ -30,8 +28,6 @@ CREATE TABLE IF NOT EXISTS "note" (
 	"title"	TEXT NOT NULL,
 	"content"	TEXT NOT NULL,
   "importance"	TEXT NOT NULL,
-  "isSynced" TEXT NOT NULL,
-  "isUpdated" TEXT NOT NULL,
   "documentId" TEXT NOT NULL,
 	PRIMARY KEY("noteId" AUTOINCREMENT)
 );
@@ -40,6 +36,6 @@ const noteActionTableSql = '''
 CREATE TABLE IF NOT EXISTS "noteAction" (
 	"noteId"	INTEGER NOT NULL,
 	"action"	TEXT NOT NULL ,
-  "userId" TEXT NOT NULL ,
+  "userId" TEXT NOT NULL 
 );
 ''';

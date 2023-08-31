@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:projectx/constants/db_constants/constants.dart';
 import 'package:projectx/enums/enums.dart';
 
@@ -7,8 +9,6 @@ class NoteDB {
   final String title;
   final String content;
   final NoteImportance importance;
-  final String isSynced;
-  final String isUpdated;
   final String documentId;
 
   NoteDB({
@@ -17,8 +17,6 @@ class NoteDB {
     required this.title,
     required this.content,
     required this.importance,
-    required this.isSynced,
-    required this.isUpdated,
     required this.documentId,
   });
 
@@ -28,13 +26,11 @@ class NoteDB {
         title = map[titleColumn] as String,
         content = map[contentColumn] as String,
         importance = map[importanceColumn] as NoteImportance,
-        isSynced = map[isSyncedColumn] as String,
-        isUpdated = map[isUpdatedColumn] as String,
         documentId = map[documentIdColumn] as String;
 
   @override
   String toString() =>
-      'noteId : $noteId, id : $id, title : $title, content : $content, importance : $importance, is synced  : $isSynced, is Updated : $isUpdated, documentId : $documentId';
+      'noteId : $noteId, id : $id, title : $title, content : $content, importance : $importance, documentId : $documentId';
 
   @override
   bool operator ==(covariant NoteDB other) => noteId == other.noteId;
@@ -44,16 +40,27 @@ class NoteDB {
 }
 
 NoteDB covertingQueryRowToANoteDbObject(
-  List myValues,
+  Iterable queryRow,
 ) {
-  return NoteDB(
-    noteId: myValues[0],
-    id: myValues[1],
-    title: myValues[2],
-    content: myValues[3],
-    importance: stringToEnums(myValues[4]),
-    isSynced: myValues[5],
-    isUpdated: myValues[6],
-    documentId: myValues[7],
-  );
+  if (queryRow.runtimeType.toString() == 'QueryResultSet') {
+    final note = queryRow.first;
+    return NoteDB(
+      noteId: note['noteId'],
+      id: note['id'],
+      title: note['title'],
+      content: note['content'],
+      importance: stringToEnums(note['importance']),
+      documentId: note['documentId'],
+    );
+  } else {
+    final note = queryRow.toList();
+    return NoteDB(
+      noteId: note[0],
+      id: note[1],
+      title: note[2],
+      content: note[3],
+      importance: stringToEnums(note[4]),
+      documentId: note[5],
+    );
+  }
 }
