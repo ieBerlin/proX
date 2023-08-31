@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:projectx/enums/enums.dart';
@@ -161,7 +160,7 @@ class FirebaseCloudStorage {
     try {
       await notes.doc(documentId).delete();
       await Services().deleteNoteFromAction(noteId: noteId);
-    } catch (e) {
+    } catch (_) {
       throw CouldNotDeleteNoteException();
     }
   }

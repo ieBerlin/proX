@@ -74,19 +74,20 @@ class Services {
     }
   }
 
-  Future<void> prepareNoteToUploadWhileUserIsOnline(
-      {required int noteId,
-      required String action,
-      required String userId}) async {
+  Future<void> prepareNoteToUploadWhileUserIsOnline({
+    required int noteId,
+    required String action,
+    required String userId,
+  }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
 
-    final noteActionId = await db.insert(noteActionTable, {
+    await db.insert(noteActionTable, {
       noteIdActionColumn: noteId,
       actionActionColumn: action,
       userIdActionColumn: userId,
     });
-    final note = await getNote(noteId: noteActionId);
+    final note = await getNote(noteId: noteId);
     cloudServicesInstance.cloudNotes.add(note);
     cloudServicesInstance.cloudNotesStreamController.add(_notes);
   }
@@ -223,21 +224,27 @@ class Services {
       importance: importance,
       documentId: documentId ?? 'DEFAULT_NULL',
     );
-    // await prepareNoteToUploadWhileUserIsOnline(
-    //   noteId: noteId,
-    //   action: 'CREATE',
-    //   userId: userUId,
-    // );
+    await prepareNoteToUploadWhileUserIsOnline(
+      noteId: noteId,
+      action: 'CREATE',
+      userId: userUId,
+    );
     _notes.add(note);
     // cloudServicesInstance.cloudNotes.add(note);
     _notesStreamController.add(_notes);
     // cloudServicesInstance.cloudNotesStreamController.add(_notes);
+    log(note.toString());
     return note;
   }
 
   Future<void> deleteNote({required int noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
+    await prepareNoteToUploadWhileUserIsOnline(
+      noteId: noteId,
+      action: 'DELETE',
+      userId: userUId,
+    );
     final result = await db.delete(
       noteTable,
       where: 'noteId = ?',
@@ -246,11 +253,6 @@ class Services {
     if (result == 0) {
       throw CouldNotDeleteNote();
     } else {
-      await prepareNoteToUploadWhileUserIsOnline(
-        noteId: noteId,
-        action: 'DELETE',
-        userId: userUId,
-      );
       _notes.removeWhere((note) => note.noteId == noteId);
       cloudServicesInstance.cloudNotes
           .removeWhere((note) => note.noteId == noteId);
@@ -321,7 +323,6 @@ class Services {
     await ensureOpeningDb();
     final db = getDbOrThrow();
 
-    await getNote(noteId: noteId);
     final note = await db.update(
       noteTable,
       {
@@ -409,7 +410,6 @@ class Services {
       where: 'noteId = ?',
       whereArgs: [noteId],
     );
-    log(noteId.toString());
     if (note.isEmpty) {
       throw CouldNotFindTheNote();
     } else {

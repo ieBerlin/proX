@@ -134,6 +134,7 @@ class _NoteViewState extends State<NoteView> {
                                                             notes: notes,
                                                             onDeleteNote:
                                                                 (note) async {
+                                                              
                                                               await services
                                                                   .deleteNote(
                                                                       noteId: note

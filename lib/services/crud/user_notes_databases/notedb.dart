@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:projectx/constants/db_constants/constants.dart';
 import 'package:projectx/enums/enums.dart';
 
