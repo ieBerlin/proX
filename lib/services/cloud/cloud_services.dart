@@ -13,12 +13,19 @@ class CloudServices {
   }
   static final CloudServices _shared = CloudServices._sharedInstance();
   factory CloudServices() => _shared;
-
+  Stream<List<NoteDB>> get allCloudNotesShouldUploaded =>
+      cloudNotesStreamController.stream;
   Future<List<NoteDB>> getAllNotesThatShouldUploaded() async {
     final notesFromActionDB = await Services().getAllNotesThatShoudlUploaded();
+
     for (var i in notesFromActionDB) {
       final note = await Services().getNote(noteId: i.noteId);
-      cloudNotes.add(note);
+      if (cloudNotes.any((element) => element.noteId == note.noteId)) {
+        cloudNotes.removeWhere((element) => note.noteId == element.noteId);
+        cloudNotes.add(note);
+      } else {
+        cloudNotes.add(note);
+      }
     }
     return cloudNotes;
   }
@@ -26,16 +33,16 @@ class CloudServices {
 
 // List<UploadNote> cloudNotes = [];
 // FirebaseCloudStorage firebaseCloudStorage = FirebaseCloudStorage();
-  // Stream<List<NoteDB>> get allCloudNotesShouldUploaded =>
-  //     cloudNotesStreamController.stream;
-  // CloudServices._sharedInstance() {
-  //   cloudNotesStreamController =
-  //       StreamController<List<NoteDB>>.broadcast(onListen: () {
-  //     cloudNotesStreamController.sink.add(cloudNotes);
-  //   });
-  // }
-  // static final CloudServices _shared = CloudServices._sharedInstance();
-  // factory CloudServices() => _shared;
+//   Stream<List<NoteDB>> get allCloudNotesShouldUploaded =>
+//       cloudNotesStreamController.stream;
+//   CloudServices._sharedInstance() {
+//     cloudNotesStreamController =
+//         StreamController<List<NoteDB>>.broadcast(onListen: () {
+//       cloudNotesStreamController.sink.add(cloudNotes);
+//     });
+//   }
+//   static final CloudServices _shared = CloudServices._sharedInstance();
+//   factory CloudServices() => _shared;
 
 
 

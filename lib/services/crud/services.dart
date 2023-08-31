@@ -50,7 +50,7 @@ class Services {
   Future<void> _cacheNotes() async {
     final allNote = await getAllNotesOfAllUsers();
     _notes = allNote.toList();
-    cloudServicesInstance.cloudNotes = allNote.toList();
+    // cloudServicesInstance.cloudNotes = allNote.toList();
     _notesStreamController.add(_notes);
   }
 
@@ -64,13 +64,6 @@ class Services {
     );
     if (result == 0) {
       throw CouldNotDeleteNote();
-    } else {
-      //pas sure
-      _notes.removeWhere((note) => note.noteId == noteId);
-      cloudServicesInstance.cloudNotes
-          .removeWhere((note) => note.noteId == noteId);
-      _notesStreamController.add(_notes);
-      cloudServicesInstance.cloudNotesStreamController.add(_notes);
     }
   }
 
@@ -81,15 +74,33 @@ class Services {
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-
-    await db.insert(noteActionTable, {
-      noteIdActionColumn: noteId,
-      actionActionColumn: action,
-      userIdActionColumn: userId,
-    });
-    final note = await getNote(noteId: noteId);
-    cloudServicesInstance.cloudNotes.add(note);
-    cloudServicesInstance.cloudNotesStreamController.add(_notes);
+    if (action == 'CREATE') {
+      await db.insert(noteActionTable, {
+        noteIdActionColumn: noteId,
+        actionActionColumn: action,
+        userIdActionColumn: userId,
+      });
+    } else if (action == 'UPDATE') {
+      await db.update(
+        noteActionTable,
+        {
+          actionActionColumn: action,
+        },
+        where: 'noteId = ?',
+        whereArgs: [noteId],
+      );
+    } else {
+      final note = await getNote(noteId: noteId);
+      if (note.documentId == 'DEFAULT_NULL') {
+        await db.delete(
+          noteActionTable,
+          where: 'noteId = ?',
+          whereArgs: [noteId],
+        );
+      } else {
+        //prepare to delete from remote server
+      }
+    }
   }
 
   Future<Iterable<UploadNote>> getAllNotesThatShoudlUploaded() async {
@@ -254,10 +265,10 @@ class Services {
       throw CouldNotDeleteNote();
     } else {
       _notes.removeWhere((note) => note.noteId == noteId);
-      cloudServicesInstance.cloudNotes
-          .removeWhere((note) => note.noteId == noteId);
+      // cloudServicesInstance.cloudNotes
+      // .removeWhere((note) => note.noteId == noteId);
       _notesStreamController.add(_notes);
-      cloudServicesInstance.cloudNotesStreamController.add(_notes);
+      // cloudServicesInstance.cloudNotesStreamController.add(_notes);
     }
   }
 // NoteDB.convertingQueryRowToNoteObjecy(Map<String, Object?> map):
@@ -292,9 +303,9 @@ class Services {
       throw CouldNotDeleteAllNotesOfProvidedEmailUser();
     } else {
       _notes = [];
-      cloudServicesInstance.cloudNotes = [];
+      // cloudServicesInstance.cloudNotes = [];
       _notesStreamController.add(_notes);
-      cloudServicesInstance.cloudNotesStreamController.add(_notes);
+      // cloudServicesInstance.cloudNotesStreamController.add(_notes);
       return result;
     }
   }
@@ -307,9 +318,9 @@ class Services {
       throw CouldNotDeleteAllNotesOfAllUsers();
     } else {
       _notes = [];
-      cloudServicesInstance.cloudNotes = [];
+      // cloudServicesInstance.cloudNotes = [];
       _notesStreamController.add(_notes);
-      cloudServicesInstance.cloudNotesStreamController.add(_notes);
+      // cloudServicesInstance.cloudNotesStreamController.add(_notes);
     }
   }
 
@@ -344,12 +355,12 @@ class Services {
       );
       final updatedNote = await getNote(noteId: noteId);
       _notes.removeWhere((note) => updatedNote.noteId == note.noteId);
-      cloudServicesInstance.cloudNotes
-          .removeWhere((note) => updatedNote.noteId == note.noteId);
+      // cloudServicesInstance.cloudNotes
+      // .removeWhere((note) => updatedNote.noteId == note.noteId);
       _notes.add(updatedNote);
-      cloudServicesInstance.cloudNotes.add(updatedNote);
+      // cloudServicesInstance.cloudNotes.add(updatedNote);
       _notesStreamController.add(_notes);
-      cloudServicesInstance.cloudNotesStreamController.add(_notes);
+      // cloudServicesInstance.cloudNotesStreamController.add(_notes);
       return updatedNote;
     }
   }

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/cloud/cloud_exceptions.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
@@ -24,6 +23,53 @@ class FirebaseCloudStorage {
         .map((event) => event.docs.map((doc) => CloudNote.fromSnapshot(doc)));
 
     return allNotes;
+  }
+
+  Future<void> uploadNotesToRemoteServer({required List<NoteDB> myList}) async {
+    final ownerId = Services().userUId;
+    for (var i in myList) {
+      if (i.documentId == 'DEFAULT_NULL') {
+        await createCloudNote(
+          ownerId: ownerId,
+          title: i.title,
+          content: i.content,
+          importance: enumToString(i.importance),
+          noteId: i.noteId,
+        );
+      } else {
+        await updateCloudNote(
+          ownerId: ownerId,
+          title: i.title,
+          noteId: i.noteId,
+          content: i.content,
+          importance: enumToString(i.importance),
+          documentId: i.documentId,
+        );
+      }
+    }
+  }
+
+  Future<List<NoteDB>> iterableOfCloudNoteToNoteDB(
+      {required Iterable<CloudNote> localNotes}) async {
+    List<NoteDB> notes = [];
+    final email = Services().email;
+    final owner = await Services().getUser(email: email);
+    final list = localNotes.toList();
+
+    for (var i = 0; i < list.length; i++) {
+      final cloudNote = list[i];
+
+      final note = await createOrGetExistingNote(
+          documentId: cloudNote.documentId,
+          title: cloudNote.title,
+          content: cloudNote.content,
+          importance: stringToEnums(cloudNote.importance),
+          owner: owner);
+
+      notes.add(note);
+    }
+
+    return notes;
   }
 
   Future<NoteDB> createOrGetExistingNote({
@@ -58,65 +104,6 @@ class FirebaseCloudStorage {
         owner: owner,
       );
       return note;
-    }
-  }
-
-  Future<List<NoteDB>> iterableOfCloudNoteToNoteDB(
-      {required Iterable<CloudNote> localNotes}) async {
-    List<NoteDB> notes = [];
-    final email = Services().email;
-    final owner = await Services().getUser(email: email);
-    final list = localNotes.toList();
-
-    for (var i = 0; i < list.length; i++) {
-      final cloudNote = list[i];
-
-      final note = await createOrGetExistingNote(
-          documentId: cloudNote.documentId,
-          title: cloudNote.title,
-          content: cloudNote.content,
-          importance: stringToEnums(cloudNote.importance),
-          owner: owner);
-
-      notes.add(note);
-    }
-
-    return notes;
-  }
-
-  Future<NoteDB> cloudNoteToNoteDB({required CloudNote cloudNote}) async {
-    String userEmail = FirebaseAuth.instance.currentUser!.email ?? '';
-    final user = await Services().getUser(email: userEmail);
-    final allnotes = await Services().getAllNotesOfAllUsers();
-    var note;
-    bool noteFoundBool = false;
-
-    for (var i in allnotes) {
-      if (i.documentId == cloudNote.documentId) {
-        noteFoundBool = true;
-        note = await Services().updateNote(
-            noteId: i.noteId,
-            title: cloudNote.title,
-            content: cloudNote.content,
-            importance: stringToEnums(cloudNote.importance),
-            documentId: cloudNote.documentId);
-      }
-    }
-    if (noteFoundBool) {
-      return note;
-    } else {
-      note = await Services().createNote(null,
-          title: cloudNote.title,
-          content: cloudNote.content,
-          importance: stringToEnums(cloudNote.importance),
-          owner: user);
-      return NoteDB(
-          noteId: note.noteId,
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          importance: note.importance,
-          documentId: note.documentId);
     }
   }
 
