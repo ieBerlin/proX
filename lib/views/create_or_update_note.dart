@@ -1,13 +1,10 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/bloc/bloc.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
+import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
-import 'package:projectx/services/crud/services.dart';
-import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
 // import 'package:share_plus/share_plus.dart';
 
@@ -20,37 +17,28 @@ class NoteListView extends StatefulWidget {
 
 class _NoteListViewState extends State<NoteListView> {
   NoteImportance _noteImportance = NoteImportance.red;
-
-  NoteDB? _note;
-  final Services _services = Services();
-  final FirebaseCloudStorage _cloudServices = FirebaseCloudStorage();
+  CloudNote? _note;
+  final FirebaseCloudStorage _notesService = FirebaseCloudStorage();
   late final TextEditingController _titleController;
   late final TextEditingController _bodyController;
   late String sharedNoteContent =
       '${_titleController.text} \n ${_bodyController.text}';
-  Future<NoteDB> createOrGetExsitingNote(BuildContext context) async {
-    final widgetNote = context.getArguments<NoteDB>();
+  Future<CloudNote> createOrGetExsitingNote(BuildContext context) async {
+    final widgetNote = context.getArguments<CloudNote>();
     if (widgetNote != null) {
       _note = widgetNote;
       _titleController.text = widgetNote.title;
       _bodyController.text = widgetNote.content;
-      _noteImportance = widgetNote.importance;
+      _noteImportance = stringToEnums(widgetNote.importance);
       return widgetNote;
     }
     final existingNote = _note;
     if (existingNote != null) {
       return existingNote;
     } else {
-      final currentUser = AuthService.firebase().currentUser;
-      final email = currentUser!.email;
-      final owner = await _services.getUser(email: email);
-      final newNote = await _services.createNote(
-        null,
-        title: _titleController.text,
-        content: _bodyController.text,
-        importance: _noteImportance,
-        owner: owner,
-      );
+      final currentUser = AuthService.firebase().currentUser!;
+      final userId = currentUser.id;
+      final newNote = await _notesService.createNewNote(ownerUserId: userId);
       _note = newNote;
       return newNote;
     }
@@ -60,11 +48,7 @@ class _NoteListViewState extends State<NoteListView> {
     final note = _note;
     if ((_titleController.text.isEmpty || _bodyController.text.isEmpty) &&
         note != null) {
-      await _services.deleteNote(noteId: note.noteId);
-      await _cloudServices.deleteNote(
-        documentId: note.documentId,
-        noteId: note.noteId,
-      );
+      await _notesService.deleteNote(documentId: note.documentId);
     }
   }
 
@@ -76,11 +60,10 @@ class _NoteListViewState extends State<NoteListView> {
     if (note != null &&
         _titleController.text.isNotEmpty &&
         _bodyController.text.isNotEmpty) {
-      await _services.updateNote(
-        noteId: note.noteId,
+      await _notesService.updateNote(
         title: title,
         content: content,
-        importance: importance,
+        importance: enumToString(importance),
         documentId: note.documentId,
       );
     }
@@ -94,12 +77,10 @@ class _NoteListViewState extends State<NoteListView> {
     final title = _titleController.text;
     final content = _bodyController.text;
     final importance = _noteImportance;
-    log(note.toString());
-    await _services.updateNote(
-      noteId: note.noteId,
+    await _notesService.updateNote(
       title: title,
       content: content,
-      importance: importance,
+      importance: enumToString(importance),
       documentId: note.documentId,
     );
   }

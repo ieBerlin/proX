@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/enums/enums.dart';
 import 'package:projectx/enums/methods.dart';
-import 'package:projectx/services/crud/services.dart';
-import 'package:projectx/services/crud/user_notes_databases/notedb.dart';
+import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/utilities/dialogs/delete_dialog.dart';
 
-typedef NoteCallBack = void Function(NoteDB note);
+typedef NoteCallBack = void Function(CloudNote note);
 
 class NotesListView extends StatelessWidget {
-  final List<NoteDB> notes;
+  final Iterable<CloudNote> notes;
   final NoteCallBack onDeleteNote;
   final NoteCallBack onTap;
   const NotesListView({
@@ -15,10 +15,8 @@ class NotesListView extends StatelessWidget {
     required this.notes,
     required this.onDeleteNote,
     required this.onTap,
-    required this.services,
   });
 
-  final Services services;
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -30,7 +28,7 @@ class NotesListView extends StatelessWidget {
         ),
         itemCount: notes.toList().length,
         itemBuilder: ((context, index) {
-          final note = notes[index];
+          final note = notes.elementAt(index);
           return InkWell(
               onTap: () {
                 onTap(note);
@@ -85,8 +83,8 @@ class NotesListView extends StatelessWidget {
                                 ),
                                 CircleAvatar(
                                   radius: 10,
-                                  backgroundColor:
-                                      enumsToColors(note.importance),
+                                  backgroundColor: enumsToColors(
+                                      stringToEnums(note.importance)),
                                 )
                               ],
                             ),
