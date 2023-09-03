@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -94,19 +96,19 @@ class _NoteViewState extends State<NoteView> {
               if (snapshot.connectionState == ConnectionState.done) {
                 return Column(
                   children: [
-                    StreamBuilder<Iterable<CloudNote>>(
-                        stream: _notesService.allNotes(ownerUserId: userId),
+                    FutureBuilder(
+                        future: _notesService.allNotes(ownerUserId: userId),
                         builder: ((context, snapshot) {
                           switch (snapshot.connectionState) {
-                            case ConnectionState.waiting:
-                            case ConnectionState.active:
+                            case ConnectionState.done:
                               if (snapshot.hasData &&
                                   snapshot.connectionState ==
-                                      ConnectionState.active) {
+                                      ConnectionState.done) {
                                 var fetchedNotes =
                                     snapshot.data as Iterable<CloudNote>;
                                 if (snapshot.hasData &&
                                     fetchedNotes.toList().isNotEmpty) {
+                                  // log(fetchedNotes.toList().toString());
                                   return FutureBuilder(
                                       future: _notesService
                                           .iterableOfCloudNoteToNoteDB(
@@ -183,6 +185,8 @@ class _NoteViewState extends State<NoteView> {
                                                     .isNotEmpty) {
                                               final notes =
                                                   snapshot.data as List<NoteDB>;
+                                              // log(notes.toList().toString());
+
                                               return Expanded(
                                                 child: NotesListView(
                                                   notes: notes,
@@ -236,6 +240,10 @@ class _NoteViewState extends State<NoteView> {
                                     case ConnectionState.active:
                                     case ConnectionState.waiting:
                                       if (snapshot.hasData) {
+                                        log(snapshot.data!
+                                            .toList()
+                                            .length
+                                            .toString());
                                         FutureBuilder(
                                             future: _notesService
                                                 .uploadNotesToRemoteServer(

@@ -23,6 +23,12 @@ class CloudNote {
         content = snapshot.data()[contentFieldName] as String,
         importance = snapshot.data()[importanceFieldName] as String,
         documentId = snapshot.id;
+  CloudNote.fromiterable(QueryDocumentSnapshot<Object?> snapshot)
+      : userId = snapshot[ownerUserIdFieldName] as String,
+        title = snapshot[titleFieldName] as String,
+        content = snapshot[contentFieldName] as String,
+        importance = snapshot[importanceFieldName] as String,
+        documentId = snapshot.id;
   @override
   String toString() {
     return 'userid : $userId, title ;  $title,documentid :$documentId content : $content, importance : $importance';

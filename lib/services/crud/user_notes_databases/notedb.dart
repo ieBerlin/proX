@@ -19,7 +19,7 @@ class NoteDB {
   });
 
   NoteDB.fromRow(Map<String, Object?> map)
-      : noteId = map[noteIdColumn] as int,
+      : noteId = map[noteIdActionColumn] as int,
         id = map[idColumn] as int,
         title = map[titleColumn] as String,
         content = map[contentColumn] as String,

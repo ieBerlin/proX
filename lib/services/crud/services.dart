@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:developer';
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/constants/db_constants/constants.dart';
@@ -62,6 +62,7 @@ class Services {
       where: 'noteId = ?',
       whereArgs: [noteId],
     );
+    log(noteId);
     if (result == 0) {
       throw CouldNotDeleteNote();
     }
@@ -104,6 +105,7 @@ class Services {
   }
 
   Future<Iterable<UploadNote>> getAllNotesThatShoudlUploaded() async {
+    // await Future.delayed(const Duration(seconds: 3));
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final notes = await db.query(noteActionTable);
@@ -235,40 +237,38 @@ class Services {
       importance: importance,
       documentId: documentId ?? 'DEFAULT_NULL',
     );
-    await prepareNoteToUploadWhileUserIsOnline(
-      noteId: noteId,
-      action: 'CREATE',
-      userId: userUId,
-    );
+    if (documentId == null) {
+      await prepareNoteToUploadWhileUserIsOnline(
+        noteId: noteId,
+        action: 'CREATE',
+        userId: userUId,
+      );
+    }
+
     _notes.add(note);
-    // cloudServicesInstance.cloudNotes.add(note);
     _notesStreamController.add(_notes);
-    // cloudServicesInstance.cloudNotesStreamController.add(_notes);
-    log(note.toString());
     return note;
   }
 
   Future<void> deleteNote({required int noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    await prepareNoteToUploadWhileUserIsOnline(
-      noteId: noteId,
-      action: 'DELETE',
-      userId: userUId,
-    );
+
     final result = await db.delete(
       noteTable,
       where: 'noteId = ?',
       whereArgs: [noteId],
     );
+    await prepareNoteToUploadWhileUserIsOnline(
+      noteId: noteId,
+      action: 'DELETE',
+      userId: userUId,
+    );
     if (result == 0) {
       throw CouldNotDeleteNote();
     } else {
       _notes.removeWhere((note) => note.noteId == noteId);
-      // cloudServicesInstance.cloudNotes
-      // .removeWhere((note) => note.noteId == noteId);
       _notesStreamController.add(_notes);
-      // cloudServicesInstance.cloudNotesStreamController.add(_notes);
     }
   }
 // NoteDB.convertingQueryRowToNoteObjecy(Map<String, Object?> map):
@@ -324,6 +324,22 @@ class Services {
     }
   }
 
+  Future<void> updateNoteDocumentId({
+    required String documentId,
+    required int noteId,
+  }) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    await db.update(
+      noteTable,
+      {
+        documentIdColumn: documentId,
+      },
+      where: 'noteId = ?',
+      whereArgs: [noteId],
+    );
+  }
+
   Future<NoteDB> updateNote({
     required int noteId,
     required String title,
@@ -333,36 +349,35 @@ class Services {
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-
-    final note = await db.update(
-      noteTable,
-      {
-        titleColumn: title,
-        contentColumn: content,
-        importanceColumn: enumToString(importance),
-        documentIdColumn: documentId,
-      },
-      where: 'noteId = ?',
-      whereArgs: [noteId],
-    );
-    if (note == 0) {
-      throw CouldNotUpdateNote();
-    } else {
-      await prepareNoteToUploadWhileUserIsOnline(
-        noteId: noteId,
-        action: 'UPDATE',
-        userId: userUId,
+    final initNote = await getNote(noteId: noteId);
+    if (initNote.title != title ||
+        initNote.content != content ||
+        initNote.importance != importance ||
+        initNote.documentId != documentId) {
+      await db.update(
+        noteTable,
+        {
+          titleColumn: title,
+          contentColumn: content,
+          importanceColumn: enumToString(importance),
+          documentIdColumn: documentId,
+        },
+        where: 'noteId = ?',
+        whereArgs: [noteId],
       );
-      final updatedNote = await getNote(noteId: noteId);
-      _notes.removeWhere((note) => updatedNote.noteId == note.noteId);
-      // cloudServicesInstance.cloudNotes
-      // .removeWhere((note) => updatedNote.noteId == note.noteId);
-      _notes.add(updatedNote);
-      // cloudServicesInstance.cloudNotes.add(updatedNote);
-      _notesStreamController.add(_notes);
-      // cloudServicesInstance.cloudNotesStreamController.add(_notes);
-      return updatedNote;
     }
+
+    await prepareNoteToUploadWhileUserIsOnline(
+      noteId: noteId,
+      action: 'UPDATE',
+      userId: userUId,
+    );
+
+    final updatedNote = await getNote(noteId: noteId);
+    _notes.removeWhere((note) => updatedNote.noteId == note.noteId);
+    _notes.add(updatedNote);
+    _notesStreamController.add(_notes);
+    return updatedNote;
   }
 
   Future<List<NoteDB>> getAllNotesOfAllUsers() async {

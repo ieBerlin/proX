@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/cloud/cloud_exceptions.dart';
@@ -16,13 +18,18 @@ class FirebaseCloudStorage {
 
   final notes = FirebaseFirestore.instance.collection('notes');
 
-  Stream<Iterable<CloudNote>> allNotes({required String ownerUserId}) {
-    final allNotes = notes
-        .where(ownerUserIdFieldName, isEqualTo: ownerUserId)
-        .snapshots()
-        .map((event) => event.docs.map((doc) => CloudNote.fromSnapshot(doc)));
+  Future<Iterable<CloudNote>> allNotes({required String ownerUserId}) async {
+    QuerySnapshot querySnapshot = await notes.get();
 
-    return allNotes;
+    // final allNotes = notes
+    //     .where(ownerUserIdFieldName, isEqualTo: ownerUserId)
+    //     .snapshots()
+    //     .map((event) => event.docs.map((doc) => CloudNote.fromSnapshot(doc)));
+    final allNotes = querySnapshot.docs
+        .where((element) => element['user_id'] == ownerUserId);
+    allNotes.map((e) => e.toString());
+
+    return allNotes.map((element) => CloudNote.fromiterable(element));
   }
 
   Future<void> uploadNotesToRemoteServer({required List<NoteDB> myList}) async {
@@ -58,7 +65,6 @@ class FirebaseCloudStorage {
 
     for (var i = 0; i < list.length; i++) {
       final cloudNote = list[i];
-
       final note = await createOrGetExistingNote(
           documentId: cloudNote.documentId,
           title: cloudNote.title,
@@ -82,7 +88,10 @@ class FirebaseCloudStorage {
     try {
       final noteId =
           await Services().getNoteOnDocumentId(documentId: documentId);
+      log(noteId.toString());
       final note = await Services().getNote(noteId: noteId);
+      log(note.toString());
+
       if (title != note.title ||
           content != note.content ||
           importance != note.importance) {
@@ -114,22 +123,29 @@ class FirebaseCloudStorage {
     required String importance,
     required int noteId,
   }) async {
-    await notes.add({
+    final document = await notes.add({
       ownerUserIdFieldName: ownerId,
       titleFieldName: title,
       contentFieldName: content,
       importanceFieldName: importance,
     });
+    final documentId = await document.get();
     await Services().deleteNoteFromAction(noteId: noteId);
+
+    await Services().updateNoteDocumentId(
+      documentId: documentId.id,
+      noteId: noteId,
+    );
   }
 
-  Future<void> updateCloudNote(
-      {required String ownerId,
-      required String title,
-      required int noteId,
-      required String content,
-      required String importance,
-      required String documentId}) async {
+  Future<void> updateCloudNote({
+    required String ownerId,
+    required String title,
+    required int noteId,
+    required String content,
+    required String importance,
+    required String documentId,
+  }) async {
     try {
       await notes.doc(documentId).update({
         titleFieldName: title,

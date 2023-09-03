@@ -1,7 +1,6 @@
 const idColumn = 'id';
 const documentIdColumn = 'documentId';
 const emailColumn = 'email';
-const noteIdColumn = 'note_id';
 const titleColumn = 'title';
 const contentColumn = 'content';
 const importanceColumn = 'importance';
