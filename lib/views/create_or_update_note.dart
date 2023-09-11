@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:projectx/UI/tools/circular_progress_inducator_widget.dart';
+import 'package:projectx/UI/tools/constants.dart';
 import 'package:projectx/bloc/bloc.dart';
 import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
+import 'package:projectx/views/home_page_view.dart';
 // import 'package:share_plus/share_plus.dart';
 
-class NoteListView extends StatefulWidget {
-  const NoteListView({super.key});
+class CreateOrUpdateNote extends StatefulWidget {
+  const CreateOrUpdateNote({super.key});
 
   @override
-  State<NoteListView> createState() => _NoteListViewState();
+  State<CreateOrUpdateNote> createState() => _CreateOrUpdateNoteState();
 }
 
-class _NoteListViewState extends State<NoteListView> {
+class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _bodyController;
   NoteImportance _noteImportance = NoteImportance.red;
   CloudNote? _note;
   final FirebaseCloudStorage _notesService = FirebaseCloudStorage();
-  late final TextEditingController _titleController;
-  late final TextEditingController _bodyController;
   late String sharedNoteContent =
       '${_titleController.text} \n ${_bodyController.text}';
   Future<CloudNote> createOrGetExsitingNote(BuildContext context) async {
@@ -46,7 +49,8 @@ class _NoteListViewState extends State<NoteListView> {
 
   void _deleteNoteIfTextEmpty() async {
     final note = _note;
-    if ((_titleController.text.isEmpty || _bodyController.text.isEmpty) &&
+    if (_titleController.text.isEmpty &&
+        _bodyController.text.isEmpty &&
         note != null) {
       await _notesService.deleteNote(documentId: note.documentId);
     }
@@ -125,131 +129,159 @@ class _NoteListViewState extends State<NoteListView> {
   Widget build(BuildContext context) {
     return BlocProvider<PriorityBloc>(
       create: (context) => PriorityBloc(initNoteImportance: _noteImportance),
-      child: Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 70,
-          backgroundColor: const Color(0xff2a5ebc),
-          // elevation: 0,s
-          title: const Text(
-            'Add note',
-            style: TextStyle(
-                fontSize: 30, color: Colors.white, fontWeight: FontWeight.w600),
-            textAlign: TextAlign.left,
-          ),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  // Share.share(sharedNoteContent);
-                },
-                icon: const Icon(Icons.share))
-          ],
-        ),
-        bottomNavigationBar: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Your note will be saved automatically ',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      child: SafeArea(
+        child: Scaffold(
+            backgroundColor: lightBlackColor(),
+            bottomNavigationBar: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Your note will be saved automatically ',
+                    style: TextStyle(
+                        color: white(),
+                        fontFamily: 'Lato-Regular',
+                        fontSize: 13),
+                  ),
+                  Icon(
+                    Icons.report,
+                    color: amber(),
+                  )
+                ],
               ),
-              Icon(
-                Icons.report,
-                color: Colors.amber,
-              )
-            ],
-          ),
-        ),
-        backgroundColor: const Color(0xffe6e6e6),
-        body: SafeArea(
-          child: FutureBuilder(
+            ),
+            body: FutureBuilder(
               future: createOrGetExsitingNote(context),
-              builder: (context, snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.done:
-                    _setupTitleControllerListener();
-                    _setupContentControllerListener();
-                    return SingleChildScrollView(
+              builder: ((context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  _setupTitleControllerListener();
+                  _setupContentControllerListener();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          const SizedBox(
-                            height: 10,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
+                            child: SizedBox(
+                                width: double.infinity,
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      splashRadius: 20,
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pushAndRemoveUntil(
+                                          MaterialPageRoute(builder: (context) {
+                                            return const HomePage();
+                                          }),
+                                          (context) => false,
+                                        );
+                                      },
+                                      icon: Icon(
+                                        Icons.chevron_left,
+                                        color: white(),
+                                      ),
+                                    ),
+                                    Text(
+                                      'Add note',
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        fontFamily: 'SF-Compact-Display-Bold',
+                                        color: white(),
+                                        fontSize: 35,
+                                      ),
+                                    ),
+                                  ],
+                                )),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 13),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 13.0),
                             child: Column(
                               children: [
                                 Container(
                                     margin: const EdgeInsets.only(bottom: 13),
                                     width: double.infinity,
-                                    child: const Text(
+                                    child: Text(
                                       'Note title',
                                       style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 20,
-                                          color: Color(0xff002240)),
+                                          fontFamily: 'SF-Compact-Display-Bold',
+                                          fontSize: 23,
+                                          color: white()),
                                       textAlign: TextAlign.left,
                                     )),
                                 TextField(
-                                  style: const TextStyle(fontSize: 21),
-                                  cursorColor: const Color(0xff002240),
-                                  controller: _titleController,
-                                  decoration: InputDecoration(
+                                    style: TextStyle(
+                                      fontSize: 19,
+                                      color: white(),
+                                      fontFamily: 'Lato-Regular',
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    cursorColor: white(),
+                                    controller: _titleController,
+                                    decoration: InputDecoration(
                                       filled: true,
-                                      fillColor: Colors.white,
+                                      fillColor: fillTextField(),
+                                      hintText:
+                                          'Type your note\'s title here...',
+                                      hintStyle: TextStyle(
+                                        color: menuBarItemColor(),
+                                        fontFamily:
+                                            'SF-Compact-Display-Regular',
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(
                                             10.0), // Add a border radius
                                         borderSide:
                                             BorderSide.none, // Hide the border
                                       ),
-                                      focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                          borderSide: const BorderSide(
-                                              width: 2,
-                                              color: Color(0xff002240)))),
-                                ),
+                                    )),
                                 Container(
                                     margin: const EdgeInsets.only(
                                         bottom: 13, top: 20),
                                     width: double.infinity,
-                                    child: const Text(
+                                    child: Text(
                                       'Note body',
                                       style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 20,
-                                          color: Color(0xff002240)),
+                                          fontFamily: 'SF-Compact-Display-Bold',
+                                          fontSize: 23,
+                                          color: white()),
                                       textAlign: TextAlign.left,
                                     )),
                                 TextField(
-                                  style: const TextStyle(fontSize: 21),
-                                  maxLines: 6,
-                                  cursorColor: const Color(0xff002240),
-                                  controller: _bodyController,
-                                  decoration: InputDecoration(
+                                    style: TextStyle(
+                                      fontSize: 19,
+                                      fontFamily: 'Lato-Regular',
+                                      fontWeight: FontWeight.w800,
+                                      color: white(),
+                                    ),
+                                    maxLines: 6,
+                                    cursorColor: white(),
+                                    controller: _bodyController,
+                                    decoration: InputDecoration(
                                       hintText:
                                           'Type your note\'s body here...',
-                                      hintStyle: const TextStyle(
-                                        color: Color(0xaa002240),
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 15,
+                                      hintStyle: TextStyle(
+                                        color: menuBarItemColor(),
+                                        fontFamily:
+                                            'SF-Compact-Display-Regular',
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                       filled: true,
-                                      fillColor: Colors.white,
+                                      fillColor: fillTextField(),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(
                                             10.0), // Add a border radius
                                         borderSide:
                                             BorderSide.none, // Hide the border
                                       ),
-                                      focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                          borderSide: const BorderSide(
-                                              width: 2,
-                                              color: Color(0xff002240)))),
-                                ),
+                                    )),
                                 const SizedBox(
                                   height: 20,
                                 ),
@@ -257,17 +289,21 @@ class _NoteListViewState extends State<NoteListView> {
                                   builder: (context, state) {
                                     return Row(
                                       children: [
-                                        const Text(
+                                        Text(
                                           'Priority',
                                           style: TextStyle(
-                                              fontSize: 27,
-                                              fontWeight: FontWeight.w600,
-                                              color: Color(0xff002240)),
+                                              fontSize: 28,
+                                              fontFamily:
+                                                  'SF-Compact-Display-Bold',
+                                              color: white()),
                                         ),
                                         const SizedBox(
                                           width: 20,
                                         ),
                                         InkWell(
+                                            enableFeedback: false,
+                                            highlightColor: transparent(),
+                                            splashColor: transparent(),
                                             onTap: () {
                                               _noteImportance =
                                                   NoteImportance.red;
@@ -283,12 +319,12 @@ class _NoteListViewState extends State<NoteListView> {
                                                   radius: 13,
                                                   backgroundColor:
                                                       state.index == 1
-                                                          ? Colors.black
-                                                          : Colors.transparent,
+                                                          ? white()
+                                                          : transparent(),
                                                 ),
-                                                const CircleAvatar(
+                                                CircleAvatar(
                                                   radius: 10,
-                                                  backgroundColor: Colors.red,
+                                                  backgroundColor: red(),
                                                 ),
                                               ],
                                             )),
@@ -296,6 +332,9 @@ class _NoteListViewState extends State<NoteListView> {
                                           width: 7,
                                         ),
                                         InkWell(
+                                            enableFeedback: false,
+                                            highlightColor: transparent(),
+                                            splashColor: transparent(),
                                             onTap: () {
                                               _noteImportance =
                                                   NoteImportance.orange;
@@ -311,13 +350,12 @@ class _NoteListViewState extends State<NoteListView> {
                                                   radius: 13,
                                                   backgroundColor:
                                                       state.index == 2
-                                                          ? Colors.black
-                                                          : Colors.transparent,
+                                                          ? white()
+                                                          : transparent(),
                                                 ),
-                                                const CircleAvatar(
+                                                CircleAvatar(
                                                   radius: 10,
-                                                  backgroundColor:
-                                                      Colors.orange,
+                                                  backgroundColor: orange(),
                                                 ),
                                               ],
                                             )),
@@ -325,6 +363,9 @@ class _NoteListViewState extends State<NoteListView> {
                                           width: 7,
                                         ),
                                         InkWell(
+                                            enableFeedback: false,
+                                            highlightColor: transparent(),
+                                            splashColor: transparent(),
                                             onTap: () {
                                               _noteImportance =
                                                   NoteImportance.yellow;
@@ -340,13 +381,12 @@ class _NoteListViewState extends State<NoteListView> {
                                                   radius: 13,
                                                   backgroundColor:
                                                       state.index == 3
-                                                          ? Colors.black
-                                                          : Colors.transparent,
+                                                          ? white()
+                                                          : transparent(),
                                                 ),
-                                                const CircleAvatar(
+                                                CircleAvatar(
                                                   radius: 10,
-                                                  backgroundColor:
-                                                      Colors.yellow,
+                                                  backgroundColor: darkBlue(),
                                                 ),
                                               ],
                                             )),
@@ -354,6 +394,9 @@ class _NoteListViewState extends State<NoteListView> {
                                           width: 7,
                                         ),
                                         InkWell(
+                                            enableFeedback: false,
+                                            highlightColor: transparent(),
+                                            splashColor: transparent(),
                                             onTap: () {
                                               _noteImportance =
                                                   NoteImportance.green;
@@ -369,12 +412,12 @@ class _NoteListViewState extends State<NoteListView> {
                                                   radius: 13,
                                                   backgroundColor:
                                                       state.index == 4
-                                                          ? Colors.black
-                                                          : Colors.transparent,
+                                                          ? white()
+                                                          : transparent(),
                                                 ),
-                                                const CircleAvatar(
+                                                CircleAvatar(
                                                   radius: 10,
-                                                  backgroundColor: Colors.green,
+                                                  backgroundColor: green(),
                                                 ),
                                               ],
                                             ))
@@ -387,12 +430,13 @@ class _NoteListViewState extends State<NoteListView> {
                           ),
                         ],
                       ),
-                    );
-                  default:
-                    return const CircularProgressIndicator();
+                    ),
+                  );
+                } else {
+                  return circularProgressIndicatorWidget();
                 }
               }),
-        ),
+            )),
       ),
     );
   }

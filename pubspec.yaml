@@ -43,6 +43,7 @@ dependencies:
   flutter_bloc: ^8.1.3
   equatable: ^2.0.5
   cloud_firestore: ^4.9.0
+  flutter_staggered_animations: ^1.1.1
   # share_plus: ^7.1.0
 
 dev_dependencies:
@@ -85,6 +86,28 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
+  fonts:
+    - family: SF-Compact
+      fonts:
+        - asset: assets/fonts/SF-Compact.ttf
+
+    - family: SF-Compact-Display-Bold
+      fonts:
+        - asset: assets/fonts/SF-Compact-Display-Bold.otf
+
+    - family: SF-Compact-Rounded-Semibold
+      fonts:
+        - asset: assets/fonts/SF-Compact-Rounded-Semibold.otf
+
+    - family: SF-Compact-Display-Regular
+      fonts:
+        - asset: assets/fonts/SF-Compact-Display-Regular.otf
+    - family: SF-Mono-Regular
+      fonts:
+        - asset: assets/fonts/SF-Mono-Regular.otf
+    - family: Lato-Regular
+      fonts:
+        - asset: assets/fonts/Lato-Regular.ttf
   # fonts:
   #   - family: Schyler
   #     fonts:

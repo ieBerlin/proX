@@ -67,12 +67,9 @@ class FirebaseAuthProvider implements AuthProvider {
         case 'wrong-password':
           throw WrongPasswordException();
         default:
-          print('error occured berlin');
           throw GenericException();
       }
     } catch (error) {
-      print('error occured berlin');
-
       throw GenericException();
     }
   }

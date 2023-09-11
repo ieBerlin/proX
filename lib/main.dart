@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:projectx/UI/tools/circular_progress_inducator_widget.dart';
 import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/helpers/loading/loading_screen.dart';
 import 'package:projectx/services/auth/bloc/auth_bloc.dart';
 import 'package:projectx/services/auth/bloc/auth_event.dart';
 import 'package:projectx/services/auth/bloc/auth_state.dart';
+import 'package:projectx/services/auth/bloc/search_bloc/search_bloc.dart';
 import 'package:projectx/services/auth/firebase_auth_provider.dart';
 import 'package:projectx/views/create_or_update_note.dart';
 import 'package:projectx/views/forgot_password_view.dart';
@@ -16,7 +18,10 @@ import 'package:projectx/views/verification_of_email.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(MultiBlocProvider(providers: [
+    BlocProvider(create: (_) => AuthBloc(FirebaseAuthProvider())),
+    BlocProvider(create: (_) => SearchBloc()),
+  ], child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -24,21 +29,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      routes: {
-        loginViewRoute: (context) => const LoginView(),
-        registerViewRoute: (context) => const RegisterView(),
-        forgotPasswordViewRoute: (context) => const ForgotPasswordView(),
-        resetPasswordViewRoute: (context) => const ResetPasswordView(),
-        homePageViewRoute: (context) => const NoteView(),
-        verificationEmailViewRoute: (context) => const VerifieEmailView(),
-        createOrUpdateNoteRoute: (context) => const NoteListView(),
-      },
-      home: BlocProvider<AuthBloc>(
-        create: (context) => AuthBloc(FirebaseAuthProvider()),
-        child: const Oriented(),
-      ),
-    );
+    return MaterialApp(routes: {
+      loginViewRoute: (context) => const LoginView(),
+      registerViewRoute: (context) => const RegisterView(),
+      forgotPasswordViewRoute: (context) => const ForgotPasswordView(),
+      resetPasswordViewRoute: (context) => const ResetPasswordView(),
+      homePageViewRoute: (context) => const HomePage(),
+      verificationEmailViewRoute: (context) => const VerifieEmailView(),
+      createOrUpdateNoteRoute: (context) => const CreateOrUpdateNote(),
+    }, home: const Oriented());
   }
 }
 
@@ -64,7 +63,7 @@ class _OrientedState extends State<Oriented> {
       }
     }, builder: ((context, state) {
       if (state is AuthStateLoggedIn) {
-        return const NoteView();
+        return const HomePage();
       } else if (state is AuthStateNeedsVerification) {
         return const VerifieEmailView();
       } else if (state is AuthStateLoggedOut) {
@@ -74,24 +73,10 @@ class _OrientedState extends State<Oriented> {
       } else if (state is AuthStateRegistering) {
         return const RegisterView();
       } else {
-        return const Scaffold(
-          body: CircularProgressIndicator(),
+        return Scaffold(
+          body: circularProgressIndicatorWidget(),
         );
       }
     }));
-  }
-}
-
-class blabs extends StatefulWidget {
-  const blabs({super.key});
-
-  @override
-  State<blabs> createState() => _blabsState();
-}
-
-class _blabsState extends State<blabs> {
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
   }
 }

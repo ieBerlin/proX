@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/UI/tools/constants.dart';
 
 typedef CloseDialog = void Function();
 CloseDialog showLoadingDialog({
@@ -9,7 +10,9 @@ CloseDialog showLoadingDialog({
     content: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const CircularProgressIndicator(),
+        CircularProgressIndicator(
+          color: menuBarItemColor(),
+        ),
         const SizedBox(height: 10.0),
         Text(text),
       ],

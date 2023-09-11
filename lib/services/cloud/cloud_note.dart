@@ -17,13 +17,14 @@ class CloudNote {
     required this.importance,
     required this.documentId,
   });
+
   CloudNote.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
       : userId = FirebaseAuth.instance.currentUser!.uid,
         title = snapshot.data()[titleFieldName] as String,
         content = snapshot.data()[contentFieldName] as String,
         importance = snapshot.data()[importanceFieldName] as String,
         documentId = snapshot.id;
-  CloudNote.fromiterable(QueryDocumentSnapshot<Object?> snapshot)
+  CloudNote.fromIterable(QueryDocumentSnapshot<Object?> snapshot)
       : userId = snapshot[ownerUserIdFieldName] as String,
         title = snapshot[titleFieldName] as String,
         content = snapshot[contentFieldName] as String,
