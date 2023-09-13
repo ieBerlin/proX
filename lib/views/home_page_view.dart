@@ -24,6 +24,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final FirebaseCloudStorage _notesService;
   String get userId => AuthService.firebase().currentUser!.id;
   late final TextEditingController textEditingController;
+  bool isDrawerOpen = false;
+
+  void toggleDrawer() {
+    setState(() {
+      isDrawerOpen = !isDrawerOpen;
+    });
+  }
+
   @override
   void initState() {
     _notesService = FirebaseCloudStorage();
@@ -34,7 +42,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     textEditingController.dispose();
-
     super.dispose();
   }
 

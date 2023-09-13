@@ -1,12 +1,13 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/UI/tools/constants.dart';
-import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/bloc/auth_bloc.dart';
 import 'package:projectx/services/auth/bloc/auth_event.dart';
 import 'package:projectx/utilities/dialogs/logout_dialog.dart';
 
 Container buildDrawer(BuildContext context) {
+  final superContext = context;
   return Container(
       alignment: Alignment.center,
       color: lightBlackColor(),
@@ -16,37 +17,19 @@ Container buildDrawer(BuildContext context) {
           shrinkWrap: true,
           itemCount: iconList.length,
           itemBuilder: (context, index) {
+            log(context.toString());
             return Padding(
                 padding: const EdgeInsets.only(left: 40.0, right: 16),
                 child: ListTile(
-                  onTap: () {
+                  onTap: () async {
                     if (descriptionList[index] == 'Dark mode') {
-                      print('Dark mode');
                     } else if (descriptionList[index] == 'Log out') {
-                      Navigator.of(context).pop();
-                      PopupMenuButton<MenuAction>(
-                        onSelected: (value) async {
-                          switch (value) {
-                            case MenuAction.logout:
-                              final shouldLogout =
-                                  await showLogOutDialog(context);
-                              if (shouldLogout) {
-                                // ignore: use_build_context_synchronously
-                                context
-                                    .read<AuthBloc>()
-                                    .add(const AuthEventLogOut());
-                              }
-                          }
-                        },
-                        itemBuilder: (context) {
-                          return const [
-                            PopupMenuItem<MenuAction>(
-                              value: MenuAction.logout,
-                              child: Text('Log out'),
-                            ),
-                          ];
-                        },
-                      );
+                      Navigator.of(superContext).pop();
+                      final shouldLogout = await showLogOutDialog(context);
+                      if (shouldLogout) {
+                        // ignore: use_build_context_synchronously
+                        superContext.read<AuthBloc>().add(const AuthEventLogOut());
+                      }
                     }
                   },
                   minLeadingWidth: 10,
