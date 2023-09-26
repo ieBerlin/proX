@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/UI/tools/constants.dart';
 
 typedef DialogOptionBuilder<T> = Map<String, T?> Function();
 Future<T?> showGenericDialog<T>({
@@ -12,8 +13,21 @@ Future<T?> showGenericDialog<T>({
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(title),
-          content: Text(content),
+          backgroundColor: lightBlackColor(),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: white(),
+              fontFamily: "SF-Compact-Display-Bold",
+            ),
+          ),
+          content: Text(
+            content,
+            style: TextStyle(
+              color: white(),
+              fontFamily: 'SF-Compact-Rounded-Semibold',
+            ),
+          ),
           actions: options.keys.map((optionTitle) {
             final value = options[optionTitle];
             return TextButton(
@@ -24,7 +38,13 @@ Future<T?> showGenericDialog<T>({
                   Navigator.of(context).pop();
                 }
               },
-              child: Text(optionTitle),
+              child: Text(
+                optionTitle,
+                style: TextStyle(
+                  color: amber(),
+                  fontFamily: "SF-Compact-Display-Bold",
+                ),
+              ),
             );
           }).toList(),
         );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/UI/tools/circular_progress_inducator_widget.dart';
+import 'package:projectx/connectivity_checker/cubit/connectivity_checker_cubit.dart';
 import 'package:projectx/constants/routes/routes.dart';
 import 'package:projectx/helpers/loading/loading_screen.dart';
 import 'package:projectx/services/auth/bloc/auth_bloc.dart';
@@ -10,6 +11,7 @@ import 'package:projectx/services/auth/bloc/search_bloc/search_bloc.dart';
 import 'package:projectx/services/auth/firebase_auth_provider.dart';
 import 'package:projectx/views/create_or_update_note.dart';
 import 'package:projectx/views/forgot_password_view.dart';
+import 'package:projectx/views/home_page_ui.dart';
 import 'package:projectx/views/home_page_view.dart';
 import 'package:projectx/views/login_view.dart';
 import 'package:projectx/views/register_view.dart';
@@ -21,6 +23,7 @@ void main() {
   runApp(MultiBlocProvider(providers: [
     BlocProvider(create: (_) => AuthBloc(FirebaseAuthProvider())),
     BlocProvider(create: (_) => SearchBloc()),
+    BlocProvider(create: (_) => ConnectivityCheckerCubit()..checkConnection()),
   ], child: const MyApp()));
 }
 
@@ -37,7 +40,7 @@ class MyApp extends StatelessWidget {
       homePageViewRoute: (context) => const HomePage(),
       verificationEmailViewRoute: (context) => const VerifieEmailView(),
       createOrUpdateNoteRoute: (context) => const CreateOrUpdateNote(),
-    }, home: const Oriented());
+    }, home: const MyWidget());
   }
 }
 
@@ -64,6 +67,8 @@ class _OrientedState extends State<Oriented> {
     }, builder: ((context, state) {
       if (state is AuthStateLoggedIn) {
         return const HomePage();
+
+        // return const HomePage();
       } else if (state is AuthStateNeedsVerification) {
         return const VerifieEmailView();
       } else if (state is AuthStateLoggedOut) {

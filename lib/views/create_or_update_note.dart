@@ -386,7 +386,7 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
                                                 ),
                                                 CircleAvatar(
                                                   radius: 10,
-                                                  backgroundColor: darkBlue(),
+                                                  backgroundColor: blue(),
                                                 ),
                                               ],
                                             )),

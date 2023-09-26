@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/UI/tools/constants.dart';
@@ -17,7 +16,6 @@ Container buildDrawer(BuildContext context) {
           shrinkWrap: true,
           itemCount: iconList.length,
           itemBuilder: (context, index) {
-            log(context.toString());
             return Padding(
                 padding: const EdgeInsets.only(left: 40.0, right: 16),
                 child: ListTile(
@@ -28,7 +26,9 @@ Container buildDrawer(BuildContext context) {
                       final shouldLogout = await showLogOutDialog(context);
                       if (shouldLogout) {
                         // ignore: use_build_context_synchronously
-                        superContext.read<AuthBloc>().add(const AuthEventLogOut());
+                        superContext
+                            .read<AuthBloc>()
+                            .add(const AuthEventLogOut());
                       }
                     }
                   },

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:projectx/UI/tools/constants.dart';
 import 'enums.dart';
 
 Color enumsToColors(NoteImportance noteImportance) {
   switch (noteImportance) {
     case NoteImportance.red:
-      return Colors.red;
+      return red();
     case NoteImportance.yellow:
-      return Colors.yellow;
+      return blue();
     case NoteImportance.green:
-      return Colors.green;
+      return green();
     case NoteImportance.orange:
-      return Colors.orange;
+      return orange();
     default:
-      return Colors.red;
+      return red();
   }
 }
 
