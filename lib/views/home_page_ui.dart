@@ -37,8 +37,21 @@ class _HomePageState extends State<MyWidget> {
         listener: (context, state) {
           if (state is NotConnectedState) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
+              const SnackBar(
+                duration: Duration(seconds: 10),
+                shape: RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.red, width: 1),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    )),
+                content: Text(
+                  'You are currently offline !',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
                 backgroundColor: Colors.red,
               ),
             );

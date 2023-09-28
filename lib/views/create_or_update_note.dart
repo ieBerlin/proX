@@ -9,10 +9,15 @@ import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
 import 'package:projectx/views/home_page_view.dart';
+import 'dart:developer';
 // import 'package:share_plus/share_plus.dart';
 
 class CreateOrUpdateNote extends StatefulWidget {
-  const CreateOrUpdateNote({super.key});
+  final bool userConnected;
+  const CreateOrUpdateNote({
+    super.key,
+    required this.userConnected,
+  });
 
   @override
   State<CreateOrUpdateNote> createState() => _CreateOrUpdateNoteState();
@@ -111,6 +116,7 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
 
   @override
   void initState() {
+    log(widget.userConnected.toString());
     _titleController = TextEditingController();
     _bodyController = TextEditingController();
     super.initState();

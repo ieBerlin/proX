@@ -49,6 +49,7 @@ class FirebaseCloudStorage {
       contentFieldName: "",
       importanceFieldName: ""
     });
+
     final fetchedNote = await document.get();
     return CloudNote(
       documentId: fetchedNote.id,

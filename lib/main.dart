@@ -11,7 +11,6 @@ import 'package:projectx/services/auth/bloc/search_bloc/search_bloc.dart';
 import 'package:projectx/services/auth/firebase_auth_provider.dart';
 import 'package:projectx/views/create_or_update_note.dart';
 import 'package:projectx/views/forgot_password_view.dart';
-import 'package:projectx/views/home_page_ui.dart';
 import 'package:projectx/views/home_page_view.dart';
 import 'package:projectx/views/login_view.dart';
 import 'package:projectx/views/register_view.dart';
@@ -29,7 +28,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(routes: {
@@ -39,19 +37,19 @@ class MyApp extends StatelessWidget {
       resetPasswordViewRoute: (context) => const ResetPasswordView(),
       homePageViewRoute: (context) => const HomePage(),
       verificationEmailViewRoute: (context) => const VerifieEmailView(),
-      createOrUpdateNoteRoute: (context) => const CreateOrUpdateNote(),
-    }, home: const MyWidget());
+      createOrUpdateNoteRoute: (context) => const CreateOrUpdateNote(userConnected: false,),
+    }, home: const Traffic());
   }
 }
 
-class Oriented extends StatefulWidget {
-  const Oriented({super.key});
+class Traffic extends StatefulWidget {
+  const Traffic({super.key});
 
   @override
-  State<Oriented> createState() => _OrientedState();
+  State<Traffic> createState() => _TrafficState();
 }
 
-class _OrientedState extends State<Oriented> {
+class _TrafficState extends State<Traffic> {
   @override
   Widget build(BuildContext context) {
     context.read<AuthBloc>().add(const AuthEventInitialize());
@@ -67,8 +65,6 @@ class _OrientedState extends State<Oriented> {
     }, builder: ((context, state) {
       if (state is AuthStateLoggedIn) {
         return const HomePage();
-
-        // return const HomePage();
       } else if (state is AuthStateNeedsVerification) {
         return const VerifieEmailView();
       } else if (state is AuthStateLoggedOut) {

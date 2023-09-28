@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:projectx/services/crud/current_crud.dart';
 import 'package:projectx/services/cloud/cloud_storage_constants.dart';
 
 @immutable
@@ -17,6 +18,14 @@ class CloudNote {
     required this.importance,
     required this.documentId,
   });
+
+  CloudNote.convertingRowToCloudNote(
+      {required Map<String, Object?> object})
+      : userId = object[userIdLocalDB] as String,
+        title =  object[titleLocalDB] as String,
+        content = object[contentLocalDB] as String,
+        importance = object[importanceLocalDB] as String,
+        documentId =  object['DEFAULT-NULL'] as String;
 
   CloudNote.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
       : userId = FirebaseAuth.instance.currentUser!.uid,
