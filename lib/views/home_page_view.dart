@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/UI/tools/constants.dart';
@@ -12,7 +10,8 @@ import 'package:projectx/services/auth/bloc/search_bloc/search_bloc.dart';
 import 'package:projectx/services/auth/bloc/search_bloc/search_event.dart';
 import 'package:projectx/services/auth/bloc/search_bloc/search_state.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
-import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
+import 'package:projectx/services/crud/current_crud.dart';
+import 'package:projectx/services/stream/all_notes_station.dart';
 import 'package:projectx/views/create_or_update_note.dart';
 import 'package:projectx/views/notes_list_view.dart';
 
@@ -24,7 +23,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  late final FirebaseCloudStorage _notesService;
+  late final AllNotesStation _notesService;
+  late final CRUDServices _crudServices;
   String get userId => AuthService.firebase().currentUser!.id;
   late final TextEditingController textEditingController;
   bool isDrawerOpen = false;
@@ -38,7 +38,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    _notesService = FirebaseCloudStorage();
+    _notesService = AllNotesStation();
+    _crudServices = CRUDServices();
+    _crudServices.openDB();
     textEditingController = TextEditingController();
     super.initState();
   }
@@ -77,7 +79,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
       body: BlocConsumer<ConnectivityCheckerCubit, InternetState>(
         listener: (context, state) {
-          log(state.toString());
           if (state is NotConnectedState) {
             userConnected = false;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -188,13 +189,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
               StreamBuilder(
-                  stream: _notesService.allNotes(ownerUserId: userId),
+                  stream: _notesService.allNotes,
                   builder: (context, snapshot) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.waiting:
                       case ConnectionState.active:
                         if (snapshot.hasData) {
                           final allNotes = snapshot.data as Iterable<CloudNote>;
+                          print(allNotes.length.toString());
                           return Expanded(
                               child: Padding(
                                   padding: const EdgeInsets.symmetric(

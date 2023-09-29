@@ -13,7 +13,6 @@ class ConnectivityCheckerCubit extends Cubit<InternetState> {
     try {
       boolFuture = await booleanFuture();
     } catch (e) {
-      print(e);
       boolFuture = false;
     }
 

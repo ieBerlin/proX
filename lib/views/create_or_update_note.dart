@@ -7,11 +7,10 @@ import 'package:projectx/enums/enums.dart';
 import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
+import 'package:projectx/services/crud/current_crud.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
 import 'package:projectx/views/home_page_view.dart';
-import 'dart:developer';
 // import 'package:share_plus/share_plus.dart';
-
 class CreateOrUpdateNote extends StatefulWidget {
   final bool userConnected;
   const CreateOrUpdateNote({
@@ -29,8 +28,9 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
   NoteImportance _noteImportance = NoteImportance.red;
   CloudNote? _note;
   final FirebaseCloudStorage _notesService = FirebaseCloudStorage();
-  late String sharedNoteContent =
-      '${_titleController.text} \n ${_bodyController.text}';
+  final CRUDServices _services = CRUDServices();
+  // late String sharedNoteContent =
+  // '${_titleController.text} \n ${_bodyController.text}';
   Future<CloudNote> createOrGetExsitingNote(BuildContext context) async {
     final widgetNote = context.getArguments<CloudNote>();
     if (widgetNote != null) {
@@ -46,9 +46,16 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     } else {
       final currentUser = AuthService.firebase().currentUser!;
       final userId = currentUser.id;
-      final newNote = await _notesService.createNewNote(ownerUserId: userId);
-      _note = newNote;
-      return newNote;
+      if (widget.userConnected) {
+        final newNote = await _notesService.createNewNote(ownerUserId: userId);
+        _note = newNote;
+        return newNote;
+      } else {
+        final newNote =
+            await _services.createNote(title: '', content: '', importance: '');
+        _note = newNote;
+        return newNote;
+      }
     }
   }
 
@@ -57,7 +64,17 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     if (_titleController.text.isEmpty &&
         _bodyController.text.isEmpty &&
         note != null) {
-      await _notesService.deleteNote(documentId: note.documentId);
+      if (widget.userConnected || note.documentId != 'DEFAULT-NULL') {
+        await _notesService.deleteNote(documentId: note.documentId);
+      } else {
+        //Based in berlin
+        // final noteId = await _services.getNoteFromTitleContentImportance(
+        //   title: title,
+        //   content: content,
+        //   importance: importance,
+        // );
+        // await _services.deleteNote(noteId: noteId);
+      }
     }
   }
 
@@ -69,12 +86,22 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     if (note != null &&
         _titleController.text.isNotEmpty &&
         _bodyController.text.isNotEmpty) {
-      await _notesService.updateNote(
-        title: title,
-        content: content,
-        importance: enumToString(importance),
-        documentId: note.documentId,
-      );
+      if (widget.userConnected && note.documentId != 'DEFAULT-NULL') {
+        await _notesService.updateNote(
+          title: title,
+          content: content,
+          importance: enumToString(importance),
+          documentId: note.documentId,
+        );
+      } else {
+        //Based in berlin
+        // await _services.updateNote(
+        //   noteId: noteId,
+        //   title: title,
+        //   content: content,
+        //   importance: enumToString(importance),
+        // );
+      }
     }
   }
 
@@ -86,12 +113,22 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     final title = _titleController.text;
     final content = _bodyController.text;
     final importance = _noteImportance;
-    await _notesService.updateNote(
-      title: title,
-      content: content,
-      importance: enumToString(importance),
-      documentId: note.documentId,
-    );
+    if (widget.userConnected || note.documentId != 'DEFAULT-NULL') {
+      await _notesService.updateNote(
+        title: title,
+        content: content,
+        importance: enumToString(importance),
+        documentId: note.documentId,
+      );
+    } else {
+      //Based in berlin
+      // await _services.updateNote(
+      //   noteId: noteId,
+      //   title: title,
+      //   content: content,
+      //   importance: enumToString(importance),
+      // );
+    }
   }
 
   void _setupImportanceControllerListener() {}
@@ -116,7 +153,6 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
 
   @override
   void initState() {
-    log(widget.userConnected.toString());
     _titleController = TextEditingController();
     _bodyController = TextEditingController();
     super.initState();
@@ -127,6 +163,7 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     _titleController.dispose();
     _bodyController.dispose();
     _deleteNoteIfTextEmpty();
+
     _saveNoteIfTextNotEmpty();
     super.dispose();
   }

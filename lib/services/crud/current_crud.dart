@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:projectx/extentions/list/filter.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/services/crud/crud_exceptions.dart';
 import 'package:sqflite/sqflite.dart';
@@ -10,52 +10,58 @@ import 'package:path/path.dart' show join;
 class CRUDServices {
   String get userId => FirebaseAuth.instance.currentUser!.uid;
   List<CloudNote> _notes = [];
-  final _notesStreamController = StreamController<List<CloudNote>>.broadcast();
+  late final StreamController<List<CloudNote>> _notesStreamController;
   static final CRUDServices _shared = CRUDServices._sharedInstance();
   factory CRUDServices() => _shared;
-  Database? _database;
-  CRUDServices._sharedInstance();
+  Database? _db;
+  CRUDServices._sharedInstance() {
+    _notesStreamController =
+        StreamController<List<CloudNote>>.broadcast(onListen: () {
+      _notesStreamController.sink.add(_notes);
+    });
+  }
+
+  Stream<List<CloudNote>> get localNotes =>
+      _notesStreamController.stream.filter((note) => note.userId == userId);
 
   //method :
 
   Future<void> openDB() async {
-    if (_database != null) {
-      throw DatabaseIsAlreadyOpenedException();
-    }
-    try {
-      final dbPath = await getApplicationDocumentsDirectory();
-      final path = join(dbPath.path, localDB);
-      final db = await openDatabase(path);
-      _database = db;
-      await db.execute(sql);
-      await _cacheNotes();
-    } catch (e) {
-      throw GenericExceptionExceptionForCRUD();
+    if (_db != null) {
+    } else {
+      try {
+        final dbPath = await getApplicationDocumentsDirectory();
+        final path = join(dbPath.path, localDB);
+        final db = await openDatabase(path);
+        _db = db;
+        await db.execute(sql);
+        await _cacheNotes();
+      } catch (e) {
+        throw GenericExceptionExceptionForCRUD();
+      }
     }
   }
 
   Future<void> closeDB() async {
-    final db = _database;
+    final db = _db;
     if (db == null) {
       throw DatabaseIsAlreadyClosedException();
     } else {
       db.close();
-      _database = null;
+      _db = null;
     }
   }
 
   Future<void> ensureOpeningDb() async {
     try {
       await openDB();
-    } on DatabaseIsAlreadyOpenedException catch (_) {
-      log('db is already opened');
-    } on GenericExceptionExceptionForCRUD catch (_) {
-      log('Genric exception');
+    } catch (err) {
+      print(err);
     }
   }
 
   Database getDbOrThrow() {
-    final db = _database;
+    final db = _db;
     if (db == null) {
       ('Could not load the database because it\'s not opened');
       throw DatabaseIsntOpenedExceptionForCRUD();
@@ -75,10 +81,9 @@ class CRUDServices {
       userIdLocalDB: userId,
       titleLocalDB: title,
       contentLocalDB: content,
-      importanceLocalDB: importance,
+      importanceLocalDB: 'red',
     });
 
-    ;
     final note = CloudNote(
       userId: userId,
       title: title,
@@ -92,14 +97,17 @@ class CRUDServices {
   }
 
   Future<CloudNote> updateNote({
-    required int noteId,
     required String title,
     required String content,
     required String importance,
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    await getNote(noteId: noteId);
+    await getNoteFromTitleContentImportance(
+      title: title,
+      content: content,
+      importance: importance,
+    );
     final updatedCount = await db.update(
       noteTable,
       {
@@ -107,13 +115,17 @@ class CRUDServices {
         contentLocalDB: content,
         importanceLocalDB: importance,
       },
-      where: 'noteId= ?',
-      whereArgs: [noteId],
+      where: 'title = ? AND content = ? AND importance = ?',
+      whereArgs: [title, content, importance],
     );
     if (updatedCount == 0) {
       throw CouldNotUpdateNote();
     } else {
-      final updatedNote = await getNote(noteId: noteId);
+      final updatedNote = await getNoteFromTitleContentImportance(
+        title: title,
+        content: content,
+        importance: importance,
+      );
       _notes.removeWhere(
         (note) =>
             updatedNote.title == note.title &&
@@ -126,14 +138,46 @@ class CRUDServices {
     }
   }
 
-  Future<void> deleteNote({required int noteId}) async {
+  Future<CloudNote> getNoteFromTitleContentImportance({
+    required String title,
+    required String content,
+    required String importance,
+  }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    final fetchedNote = await getNote(noteId: noteId);
+    final notes = await db.query(
+      noteTable,
+      where: 'title = ? AND content = ? AND importance = ?',
+      whereArgs: [title, content, importance],
+    );
+    final note = CloudNote.convertingRowToCloudNote(object: notes.first);
+    _notes.removeWhere(
+      (fetchedNote) =>
+          fetchedNote.title == note.title &&
+          fetchedNote.content == note.content &&
+          fetchedNote.importance == note.importance,
+    );
+    _notes.add(note);
+    _notesStreamController.add(_notes);
+    return note;
+  }
+
+  Future<void> deleteNote({
+    required String title,
+    required String content,
+    required String importance,
+  }) async {
+    await ensureOpeningDb();
+    final db = getDbOrThrow();
+    final fetchedNote = await getNoteFromTitleContentImportance(
+      title: title,
+      content: content,
+      importance: importance,
+    );
     final resultOfDeleting = await db.delete(
       noteTable,
-      where: 'noteId = ',
-      whereArgs: [noteId],
+      where: 'title = ? AND content = ? AND importance = ?',
+      whereArgs: [title, content, importance],
     );
     if (resultOfDeleting == 0) {
       throw CouldNotDeleteNote();
@@ -148,39 +192,17 @@ class CRUDServices {
     }
   }
 
-  Future<CloudNote> getNote({required int noteId}) async {
+  Future<Iterable<CloudNote>> allNotesOfCurrentUser({
+    required String userId,
+  }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final notes = await db.query(
       noteTable,
-      limit: 1,
-      where: 'noteId = ',
-      whereArgs: [noteId],
+      // where: 'userId = ',
+      // whereArgs: [userId],
     );
-    if (notes.isEmpty) {
-      throw CouldNotFindTheNote();
-    }
-    final note = CloudNote.convertingRowToCloudNote(object: notes.first);
-    _notes.removeWhere(
-      (fetchedNote) =>
-          fetchedNote.title == note.title &&
-          fetchedNote.content == note.content &&
-          fetchedNote.importance == note.importance,
-    );
-    _notes.add(note);
-    _notesStreamController.add(_notes);
-    return note;
-  }
 
-  Future<Iterable<CloudNote>> allNotesOfCurrentUser(
-      {required String userId}) async {
-    await ensureOpeningDb();
-    final db = getDbOrThrow();
-    final notes = await db.query(
-      noteTable,
-      where: 'userId = ',
-      whereArgs: [userId],
-    );
     return notes
         .map((object) => CloudNote.convertingRowToCloudNote(object: object));
   }
@@ -201,21 +223,17 @@ class CRUDServices {
 }
 
 // constants
-
 const localDB = 'projectX.db';
-const idLocalDB = 'id';
 const userIdLocalDB = 'userId';
 const titleLocalDB = 'title';
 const contentLocalDB = 'content';
 const importanceLocalDB = 'importance';
 const noteTable = 'notes';
 const sql = '''
-CREATE IF NOT EXISTS "notes"(
- "id"	INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS "notes"(
    "userId" Text NOT NULL,
 	"title"	TEXT NOT NULL,
 	"content"	TEXT NOT NULL,
-  "importance"	TEXT NOT NULL,
-  PRIMARY KEY("noteId" AUTOINCREMENT)
+  "importance"	TEXT NOT NULL
   );
 ''';

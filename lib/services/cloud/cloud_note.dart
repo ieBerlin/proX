@@ -19,13 +19,12 @@ class CloudNote {
     required this.documentId,
   });
 
-  CloudNote.convertingRowToCloudNote(
-      {required Map<String, Object?> object})
+  CloudNote.convertingRowToCloudNote({required Map<String, Object?> object})
       : userId = object[userIdLocalDB] as String,
-        title =  object[titleLocalDB] as String,
+        title = object[titleLocalDB] as String,
         content = object[contentLocalDB] as String,
         importance = object[importanceLocalDB] as String,
-        documentId =  object['DEFAULT-NULL'] as String;
+        documentId = 'DEFAULT-NULL';
 
   CloudNote.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
       : userId = FirebaseAuth.instance.currentUser!.uid,
@@ -41,6 +40,6 @@ class CloudNote {
         documentId = snapshot.id;
   @override
   String toString() {
-    return 'userid : $userId, title ;  $title,documentid :$documentId content : $content, importance : $importance';
+    return 'userid : $userId, title :  $title,documentid :$documentId content : $content, importance : $importance';
   }
 }

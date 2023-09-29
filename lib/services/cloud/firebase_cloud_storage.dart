@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:projectx/services/cloud/cloud_exceptions.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/services/cloud/cloud_storage_constants.dart';
+import 'package:projectx/services/crud/current_crud.dart';
 
 class FirebaseCloudStorage {
+  final CRUDServices _services = CRUDServices();
   static final FirebaseCloudStorage _shared =
       FirebaseCloudStorage._sharedInstance();
   FirebaseCloudStorage._sharedInstance();
@@ -31,16 +34,31 @@ class FirebaseCloudStorage {
     return fetchedNotes;
   }
 
-  Stream<Iterable<CloudNote>> allNotes({required String ownerUserId}) {
-    final allNotes = notes
-        .where(
-          ownerUserIdFieldName,
-          isEqualTo: ownerUserId,
-        )
-        .snapshots()
-        .map((event) => event.docs.map((doc) => CloudNote.fromSnapshot(doc)));
-    return allNotes;
-  }
+  Stream<List<CloudNote>> allNotes({required String ownerUserId}) =>
+      _services.localNotes;
+
+  // Stream<Iterable<CloudNote>> allNotes({required String ownerUserId}) async* {
+  //   final cloudNotes = notes
+  //       .where(
+  //         ownerUserIdFieldName,
+  //         isEqualTo: ownerUserId,
+  //       )
+  //       .snapshots()
+  //       .map((event) => event.docs.map((doc) => CloudNote.fromSnapshot(doc)));
+  //   final localNotes = _services.localNotes;
+  //   yield* streamNotes(cloudNotes, localNotes);
+  // }
+
+  // Stream<Iterable<CloudNote>> streamNotes(
+  //     Stream<Iterable<CloudNote>> cloudNotes,
+  //     Stream<Iterable<CloudNote>> localNotes) async* {
+  //   await for (var i in cloudNotes) {
+  //     yield i;
+  //   }
+  //   await for (var i in localNotes) {
+  //     yield i;
+  //   }
+  // }
 
   Future<CloudNote> createNewNote({required String ownerUserId}) async {
     final document = await notes.add({
