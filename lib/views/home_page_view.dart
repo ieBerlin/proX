@@ -10,8 +10,8 @@ import 'package:projectx/services/auth/bloc/search_bloc/search_bloc.dart';
 import 'package:projectx/services/auth/bloc/search_bloc/search_event.dart';
 import 'package:projectx/services/auth/bloc/search_bloc/search_state.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
+import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
 import 'package:projectx/services/crud/current_crud.dart';
-import 'package:projectx/services/stream/all_notes_station.dart';
 import 'package:projectx/views/create_or_update_note.dart';
 import 'package:projectx/views/notes_list_view.dart';
 
@@ -23,13 +23,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  late final AllNotesStation _notesService;
   late final CRUDServices _crudServices;
+  late final FirebaseCloudStorage _firebaseCloudStorage;
+  Iterable<CloudNote> allNotes = [];
   String get userId => AuthService.firebase().currentUser!.id;
   late final TextEditingController textEditingController;
   bool isDrawerOpen = false;
   bool userConnected = false;
-
   void toggleDrawer() {
     setState(() {
       isDrawerOpen = !isDrawerOpen;
@@ -38,9 +38,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    _notesService = AllNotesStation();
     _crudServices = CRUDServices();
     _crudServices.openDB();
+    _firebaseCloudStorage = FirebaseCloudStorage();
     textEditingController = TextEditingController();
     super.initState();
   }
@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ),
       body: BlocConsumer<ConnectivityCheckerCubit, InternetState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is NotConnectedState) {
             userConnected = false;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -100,6 +100,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             );
           } else {
+            final allNotes = await _crudServices.allNotes();
+            await _firebaseCloudStorage.uploadNotes(
+              notes: allNotes,
+              userId: userId,
+            );
             userConnected = true;
           }
         },
@@ -189,52 +194,70 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
               StreamBuilder(
-                  stream: _notesService.allNotes,
-                  builder: (context, snapshot) {
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                      case ConnectionState.active:
-                        if (snapshot.hasData) {
-                          final allNotes = snapshot.data as Iterable<CloudNote>;
-                          print(allNotes.length.toString());
-                          return Expanded(
-                              child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 15),
-                                  child: BlocBuilder<SearchBloc, SearchState>(
-                                    builder: (context, state) {
-                                      return GridViewClass(
-                                        notes: allNotes,
-                                        onTap: (note) {
-                                          Navigator.of(context).pushNamed(
-                                            createOrUpdateNoteRoute,
-                                            arguments: note,
-                                          );
-                                        },
-                                      );
-                                    },
-                                  )));
-                        } else {
-                          return Expanded(
-                            child: Center(
-                              child: Text(
-                                'There is no note to show!\nTry to create one',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: white(),
-                                  fontFamily: "SF-Compact-Display-Bold",
-                                  fontSize: 27,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                      default:
-                        return const CircularProgressIndicator(
-                          color: Colors.red,
-                        );
-                    }
-                  })
+                stream: _firebaseCloudStorage.allNotes(ownerUserId: userId),
+                builder: ((context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                    case ConnectionState.active:
+                      if (snapshot.hasData) {
+                        allNotes = snapshot.data as Iterable<CloudNote>;
+                      }
+                      return StreamBuilder(
+                        stream: _crudServices.localNotes,
+                        builder: (context, snapshot) {
+                          switch (snapshot.connectionState) {
+                            case ConnectionState.waiting:
+                            case ConnectionState.active:
+                              if (snapshot.hasData) {
+                                final localNotes =
+                                    snapshot.data as Iterable<CloudNote>;
+                                allNotes = [...allNotes, ...localNotes];
+                              }
+                              if (allNotes.isEmpty) {
+                                return Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      'There is no note to show!\nTry to create one',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: white(),
+                                        fontFamily: "SF-Compact-Display-Bold",
+                                        fontSize: 27,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return Expanded(
+                                    child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 15),
+                                        child: BlocBuilder<SearchBloc,
+                                            SearchState>(
+                                          builder: (context, state) {
+                                            return GridViewClass(
+                                              notes: allNotes,
+                                              onTap: (note) {
+                                                Navigator.of(context).pushNamed(
+                                                  createOrUpdateNoteRoute,
+                                                  arguments: note,
+                                                );
+                                              },
+                                            );
+                                          },
+                                        )));
+                              }
+                            default:
+                              return const CircularProgressIndicator(
+                                  color: Colors.red);
+                          }
+                        },
+                      );
+                    default:
+                      return const CircularProgressIndicator(color: Colors.red);
+                  }
+                }),
+              )
             ],
           );
         },

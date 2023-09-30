@@ -7,7 +7,6 @@ import 'package:projectx/services/cloud/cloud_storage_constants.dart';
 import 'package:projectx/services/crud/current_crud.dart';
 
 class FirebaseCloudStorage {
-  final CRUDServices _services = CRUDServices();
   static final FirebaseCloudStorage _shared =
       FirebaseCloudStorage._sharedInstance();
   FirebaseCloudStorage._sharedInstance();
@@ -34,31 +33,35 @@ class FirebaseCloudStorage {
     return fetchedNotes;
   }
 
-  Stream<List<CloudNote>> allNotes({required String ownerUserId}) =>
-      _services.localNotes;
+  Stream<Iterable<CloudNote>> allNotes({required String ownerUserId}) {
+    final allNotes = notes
+        .where(
+          ownerUserIdFieldName,
+          isEqualTo: ownerUserId,
+        )
+        .snapshots()
+        .map((event) => event.docs.map((doc) => CloudNote.fromSnapshot(doc)));
 
-  // Stream<Iterable<CloudNote>> allNotes({required String ownerUserId}) async* {
-  //   final cloudNotes = notes
-  //       .where(
-  //         ownerUserIdFieldName,
-  //         isEqualTo: ownerUserId,
-  //       )
-  //       .snapshots()
-  //       .map((event) => event.docs.map((doc) => CloudNote.fromSnapshot(doc)));
-  //   final localNotes = _services.localNotes;
-  //   yield* streamNotes(cloudNotes, localNotes);
-  // }
+    return allNotes;
+  }
 
-  // Stream<Iterable<CloudNote>> streamNotes(
-  //     Stream<Iterable<CloudNote>> cloudNotes,
-  //     Stream<Iterable<CloudNote>> localNotes) async* {
-  //   await for (var i in cloudNotes) {
-  //     yield i;
-  //   }
-  //   await for (var i in localNotes) {
-  //     yield i;
-  //   }
-  // }
+  Future<void> uploadNotes(
+      {required Iterable<CloudNote> notes, required String userId}) async {
+    for (var note in notes) {
+      final currentNote = await createNewNote(ownerUserId: userId);
+      await updateNote(
+        documentId: currentNote.documentId,
+        title: note.title,
+        content: note.content,
+        importance: note.importance,
+      );
+      await CRUDServices().deleteNote(
+        title: note.title,
+        content: note.content,
+        importance: note.importance,
+      );
+    }
+  }
 
   Future<CloudNote> createNewNote({required String ownerUserId}) async {
     final document = await notes.add({

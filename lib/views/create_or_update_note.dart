@@ -11,6 +11,9 @@ import 'package:projectx/services/crud/current_crud.dart';
 import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
 import 'package:projectx/views/home_page_view.dart';
 // import 'package:share_plus/share_plus.dart';
+
+
+
 class CreateOrUpdateNote extends StatefulWidget {
   final bool userConnected;
   const CreateOrUpdateNote({
