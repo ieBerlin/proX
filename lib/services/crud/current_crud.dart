@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:projectx/extentions/list/filter.dart';
@@ -37,6 +38,7 @@ class CRUDServices {
         await db.execute(sql);
         await _cacheNotes();
       } catch (e) {
+        log(e.toString());
         throw GenericExceptionExceptionForCRUD();
       }
     }
@@ -77,7 +79,7 @@ class CRUDServices {
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    await db.insert(noteTable, {
+  final noteId =   await db.insert(noteTable, {
       userIdLocalDB: userId,
       titleLocalDB: title,
       contentLocalDB: content,
@@ -85,6 +87,7 @@ class CRUDServices {
     });
 
     final note = CloudNote(
+      noteId: noteId,
       userId: userId,
       title: title,
       content: content,
@@ -97,17 +100,14 @@ class CRUDServices {
   }
 
   Future<CloudNote> updateNote({
+    required int noteId,
     required String title,
     required String content,
     required String importance,
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    await getNoteFromTitleContentImportance(
-      title: title,
-      content: content,
-      importance: importance,
-    );
+    await getNote(noteId: noteId);
     final updatedCount = await db.update(
       noteTable,
       {
@@ -115,17 +115,13 @@ class CRUDServices {
         contentLocalDB: content,
         importanceLocalDB: importance,
       },
-      where: 'title = ? AND content = ? AND importance = ?',
-      whereArgs: [title, content, importance],
+      where: 'noteId = ?',
+      whereArgs: [noteId],
     );
     if (updatedCount == 0) {
       throw CouldNotUpdateNote();
     } else {
-      final updatedNote = await getNoteFromTitleContentImportance(
-        title: title,
-        content: content,
-        importance: importance,
-      );
+      final updatedNote = await getNote(noteId: noteId);
       _notes.removeWhere(
         (note) =>
             updatedNote.title == note.title &&
@@ -138,56 +134,38 @@ class CRUDServices {
     }
   }
 
-  Future<CloudNote> getNoteFromTitleContentImportance({
-    required String title,
-    required String content,
-    required String importance,
-  }) async {
+  Future<CloudNote> getNote({required int noteId}) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final notes = await db.query(
       noteTable,
-      where: 'title = ? AND content = ? AND importance = ?',
-      whereArgs: [title, content, importance],
+      where: 'noteId = ?',
+      whereArgs: [noteId],
     );
+    log(notes.length.toString());
     final note = CloudNote.convertingRowToCloudNote(object: notes.first);
-    _notes.removeWhere(
-      (fetchedNote) =>
-          fetchedNote.title == note.title &&
-          fetchedNote.content == note.content &&
-          fetchedNote.importance == note.importance,
-    );
+    log(note.toString());
+    _notes.removeWhere((fetchedNote) => fetchedNote.noteId == note.noteId);
     _notes.add(note);
     _notesStreamController.add(_notes);
     return note;
   }
 
   Future<void> deleteNote({
-    required String title,
-    required String content,
-    required String importance,
+    required int noteId,
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-    final fetchedNote = await getNoteFromTitleContentImportance(
-      title: title,
-      content: content,
-      importance: importance,
-    );
+    final fetchedNote = await getNote(noteId: noteId);
     final resultOfDeleting = await db.delete(
       noteTable,
-      where: 'title = ? AND content = ? AND importance = ?',
-      whereArgs: [title, content, importance],
+      where: 'noteId = ?',
+      whereArgs: [noteId],
     );
     if (resultOfDeleting == 0) {
       throw CouldNotDeleteNote();
     } else {
-      _notes.removeWhere(
-        (note) =>
-            fetchedNote.title == note.title &&
-            fetchedNote.content == note.content &&
-            fetchedNote.importance == note.importance,
-      );
+      _notes.removeWhere((note) => note.noteId == fetchedNote.noteId);
       _notesStreamController.add(_notes);
     }
   }
@@ -224,6 +202,7 @@ class CRUDServices {
 
 // constants
 const localDB = 'projectX.db';
+const noteIdDB = 'noteId';
 const userIdLocalDB = 'userId';
 const titleLocalDB = 'title';
 const contentLocalDB = 'content';
@@ -231,9 +210,11 @@ const importanceLocalDB = 'importance';
 const noteTable = 'notes';
 const sql = '''
 CREATE TABLE IF NOT EXISTS "notes"(
+     "noteId" INTEGER NOT NULL,
    "userId" Text NOT NULL,
 	"title"	TEXT NOT NULL,
 	"content"	TEXT NOT NULL,
-  "importance"	TEXT NOT NULL
+  "importance"	TEXT NOT NULL,
+ 	PRIMARY KEY("noteId" AUTOINCREMENT)
   );
 ''';

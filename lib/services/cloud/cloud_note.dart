@@ -6,12 +6,14 @@ import 'package:projectx/services/cloud/cloud_storage_constants.dart';
 
 @immutable
 class CloudNote {
+  final int noteId;
   final String userId;
   final String title;
   final String content;
   final String importance;
   final String documentId;
   const CloudNote({
+    this.noteId = -1,
     required this.userId,
     required this.title,
     required this.content,
@@ -20,20 +22,23 @@ class CloudNote {
   });
 
   CloudNote.convertingRowToCloudNote({required Map<String, Object?> object})
-      : userId = object[userIdLocalDB] as String,
+      : noteId = object[noteIdDB] as int,
+        userId = object[userIdLocalDB] as String,
         title = object[titleLocalDB] as String,
         content = object[contentLocalDB] as String,
         importance = object[importanceLocalDB] as String,
         documentId = 'DEFAULT-NULL';
 
   CloudNote.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
-      : userId = FirebaseAuth.instance.currentUser!.uid,
+      : noteId = (snapshot.data()[noteIdFieldName] ?? -1) as int,
+        userId = FirebaseAuth.instance.currentUser!.uid,
         title = snapshot.data()[titleFieldName] as String,
         content = snapshot.data()[contentFieldName] as String,
         importance = snapshot.data()[importanceFieldName] as String,
         documentId = snapshot.id;
   CloudNote.fromIterable(QueryDocumentSnapshot<Object?> snapshot)
-      : userId = snapshot[ownerUserIdFieldName] as String,
+      : noteId = (snapshot[noteIdFieldName] ?? -1) as int,
+        userId = snapshot[ownerUserIdFieldName] as String,
         title = snapshot[titleFieldName] as String,
         content = snapshot[contentFieldName] as String,
         importance = snapshot[importanceFieldName] as String,

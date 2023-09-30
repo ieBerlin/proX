@@ -49,16 +49,15 @@ class FirebaseCloudStorage {
       {required Iterable<CloudNote> notes, required String userId}) async {
     for (var note in notes) {
       final currentNote = await createNewNote(ownerUserId: userId);
-      await updateNote(
+      final noteId = note.noteId;
+      await updateCloudNote(
         documentId: currentNote.documentId,
         title: note.title,
         content: note.content,
         importance: note.importance,
       );
       await CRUDServices().deleteNote(
-        title: note.title,
-        content: note.content,
-        importance: note.importance,
+        noteId: noteId,
       );
     }
   }
@@ -81,7 +80,7 @@ class FirebaseCloudStorage {
     );
   }
 
-  Future<void> updateNote({
+  Future<void> updateCloudNote({
     required String documentId,
     required String title,
     required String content,

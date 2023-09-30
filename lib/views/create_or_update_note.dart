@@ -12,8 +12,6 @@ import 'package:projectx/utilities/dialogs/generics/get_arguments.dart';
 import 'package:projectx/views/home_page_view.dart';
 // import 'package:share_plus/share_plus.dart';
 
-
-
 class CreateOrUpdateNote extends StatefulWidget {
   final bool userConnected;
   const CreateOrUpdateNote({
@@ -67,16 +65,11 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     if (_titleController.text.isEmpty &&
         _bodyController.text.isEmpty &&
         note != null) {
-      if (widget.userConnected || note.documentId != 'DEFAULT-NULL') {
+      if (note.documentId != 'DEFAULT-NULL') {
         await _notesService.deleteNote(documentId: note.documentId);
       } else {
         //Based in berlin
-        // final noteId = await _services.getNoteFromTitleContentImportance(
-        //   title: title,
-        //   content: content,
-        //   importance: importance,
-        // );
-        // await _services.deleteNote(noteId: noteId);
+        await _services.deleteNote(noteId: note.noteId);
       }
     }
   }
@@ -89,8 +82,8 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     if (note != null &&
         _titleController.text.isNotEmpty &&
         _bodyController.text.isNotEmpty) {
-      if (widget.userConnected && note.documentId != 'DEFAULT-NULL') {
-        await _notesService.updateNote(
+      if (note.documentId != 'DEFAULT-NULL') {
+        await _notesService.updateCloudNote(
           title: title,
           content: content,
           importance: enumToString(importance),
@@ -98,12 +91,12 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
         );
       } else {
         //Based in berlin
-        // await _services.updateNote(
-        //   noteId: noteId,
-        //   title: title,
-        //   content: content,
-        //   importance: enumToString(importance),
-        // );
+        await _services.updateNote(
+          noteId: note.noteId,
+          title: title,
+          content: content,
+          importance: enumToString(importance),
+        );
       }
     }
   }
@@ -116,8 +109,8 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     final title = _titleController.text;
     final content = _bodyController.text;
     final importance = _noteImportance;
-    if (widget.userConnected || note.documentId != 'DEFAULT-NULL') {
-      await _notesService.updateNote(
+    if (note.documentId != 'DEFAULT-NULL') {
+      await _notesService.updateCloudNote(
         title: title,
         content: content,
         importance: enumToString(importance),
@@ -125,12 +118,12 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
       );
     } else {
       //Based in berlin
-      // await _services.updateNote(
-      //   noteId: noteId,
-      //   title: title,
-      //   content: content,
-      //   importance: enumToString(importance),
-      // );
+      await _services.updateNote(
+        noteId: note.noteId,
+        title: title,
+        content: content,
+        importance: enumToString(importance),
+      );
     }
   }
 
@@ -166,7 +159,6 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     _titleController.dispose();
     _bodyController.dispose();
     _deleteNoteIfTextEmpty();
-
     _saveNoteIfTextNotEmpty();
     super.dispose();
   }
@@ -331,7 +323,10 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
                                 const SizedBox(
                                   height: 20,
                                 ),
-                                BlocBuilder<PriorityBloc, PriorityIndex>(
+                                BlocConsumer<PriorityBloc, PriorityIndex>(
+                                  listener: (context, state) {
+                                    _textEditingListener();
+                                  },
                                   builder: (context, state) {
                                     return Row(
                                       children: [
