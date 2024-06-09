@@ -79,7 +79,7 @@ class CRUDServices {
   }) async {
     await ensureOpeningDb();
     final db = getDbOrThrow();
-  final noteId =   await db.insert(noteTable, {
+    final noteId = await db.insert(noteTable, {
       userIdLocalDB: userId,
       titleLocalDB: title,
       contentLocalDB: content,
@@ -94,6 +94,8 @@ class CRUDServices {
       importance: importance,
       documentId: 'DEFAULT-NULL',
     );
+    log('created note');
+    log(note.toString());
     _notes.add(note);
     _notesStreamController.add(_notes);
     return note;
@@ -105,6 +107,8 @@ class CRUDServices {
     required String content,
     required String importance,
   }) async {
+    log('from update notet');
+    log(noteId.toString());
     await ensureOpeningDb();
     final db = getDbOrThrow();
     await getNote(noteId: noteId);
@@ -135,6 +139,8 @@ class CRUDServices {
   }
 
   Future<CloudNote> getNote({required int noteId}) async {
+    log('from get note');
+    log(noteId.toString());
     await ensureOpeningDb();
     final db = getDbOrThrow();
     final notes = await db.query(
@@ -142,7 +148,6 @@ class CRUDServices {
       where: 'noteId = ?',
       whereArgs: [noteId],
     );
-    log(notes.length.toString());
     final note = CloudNote.convertingRowToCloudNote(object: notes.first);
     log(note.toString());
     _notes.removeWhere((fetchedNote) => fetchedNote.noteId == note.noteId);
@@ -210,8 +215,8 @@ const importanceLocalDB = 'importance';
 const noteTable = 'notes';
 const sql = '''
 CREATE TABLE IF NOT EXISTS "notes"(
-     "noteId" INTEGER NOT NULL,
-   "userId" Text NOT NULL,
+  "noteId" INTEGER NOT NULL,
+  "userId" Text NOT NULL,
 	"title"	TEXT NOT NULL,
 	"content"	TEXT NOT NULL,
   "importance"	TEXT NOT NULL,

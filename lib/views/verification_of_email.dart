@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:projectx/UI/tools/constants.dart';
 import 'package:projectx/services/auth/bloc/auth_bloc.dart';
 import 'package:projectx/services/auth/bloc/auth_event.dart';
 
@@ -19,8 +20,9 @@ class _VerifieEmailViewState extends State<VerifieEmailView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: lightBlackColor(),
         appBar: AppBar(
-          backgroundColor: const Color(0xff813995),
+          backgroundColor: blackColor(),
           centerTitle: true,
           title: const Text(
             'Verification email',
@@ -36,7 +38,7 @@ class _VerifieEmailViewState extends State<VerifieEmailView> {
             const Text(
               'We\'ve send you an email verification,\n check you email!',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black),
+              style: TextStyle(color: Colors.white),
             ),
             const SizedBox(
               height: 20,
@@ -45,7 +47,18 @@ class _VerifieEmailViewState extends State<VerifieEmailView> {
                 onPressed: () async {
                   context.read<AuthBloc>().add(const AuthEventLogOut());
                 },
-                child: const Text('Back to login page'))
+                style: ButtonStyle(
+                  padding: MaterialStateProperty.all(const EdgeInsets.symmetric(
+                      vertical: 2.0, horizontal: 4.0)),
+                  backgroundColor: MaterialStateProperty.all(
+                      const Color.fromARGB(255, 51, 51, 54)),
+                ),
+                child: const Text(
+                  'Back to login page',
+                  style: TextStyle(
+                      backgroundColor: Color.fromARGB(255, 51, 51, 54),
+                      color: Colors.white),
+                ))
           ],
         )));
   }

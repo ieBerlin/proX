@@ -1,10 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/UI/tools/circular_progress_inducator_widget.dart';
 import 'package:projectx/UI/tools/constants.dart';
 import 'package:projectx/bloc/bloc.dart';
 import 'package:projectx/enums/enums.dart';
-import 'package:projectx/services/auth/auth_service.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
 import 'package:projectx/services/cloud/firebase_cloud_storage.dart';
 import 'package:projectx/services/crud/current_crud.dart';
@@ -24,12 +24,13 @@ class CreateOrUpdateNote extends StatefulWidget {
 }
 
 class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
+  final ownerUserId = FirebaseAuth.instance.currentUser!.uid;
   late final TextEditingController _titleController;
   late final TextEditingController _bodyController;
   NoteImportance _noteImportance = NoteImportance.red;
   CloudNote? _note;
-  final FirebaseCloudStorage _notesService = FirebaseCloudStorage();
   final CRUDServices _services = CRUDServices();
+  final FirebaseCloudStorage _firebaseCloudStorage = FirebaseCloudStorage();
   // late String sharedNoteContent =
   // '${_titleController.text} \n ${_bodyController.text}';
   Future<CloudNote> createOrGetExsitingNote(BuildContext context) async {
@@ -45,10 +46,9 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     if (existingNote != null) {
       return existingNote;
     } else {
-      final currentUser = AuthService.firebase().currentUser!;
-      final userId = currentUser.id;
       if (widget.userConnected) {
-        final newNote = await _notesService.createNewNote(ownerUserId: userId);
+        final newNote =
+            await _firebaseCloudStorage.createNewNote(ownerUserId: ownerUserId);
         _note = newNote;
         return newNote;
       } else {
@@ -62,13 +62,12 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
 
   void _deleteNoteIfTextEmpty() async {
     final note = _note;
-    if (_titleController.text.isEmpty &&
-        _bodyController.text.isEmpty &&
+    if (_titleController.text == '' &&
+        _bodyController.text == '' &&
         note != null) {
       if (note.documentId != 'DEFAULT-NULL') {
-        await _notesService.deleteNote(documentId: note.documentId);
+        await _firebaseCloudStorage.deleteNote(documentId: note.documentId);
       } else {
-        //Based in berlin
         await _services.deleteNote(noteId: note.noteId);
       }
     }
@@ -80,17 +79,16 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     final content = _bodyController.text;
     final importance = _noteImportance;
     if (note != null &&
-        _titleController.text.isNotEmpty &&
-        _bodyController.text.isNotEmpty) {
+        _titleController.text != '' &&
+        _bodyController.text != '') {
       if (note.documentId != 'DEFAULT-NULL') {
-        await _notesService.updateCloudNote(
+        await _firebaseCloudStorage.updateCloudNote(
+          documentId: note.documentId,
           title: title,
           content: content,
           importance: enumToString(importance),
-          documentId: note.documentId,
         );
       } else {
-        //Based in berlin
         await _services.updateNote(
           noteId: note.noteId,
           title: title,
@@ -110,14 +108,13 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
     final content = _bodyController.text;
     final importance = _noteImportance;
     if (note.documentId != 'DEFAULT-NULL') {
-      await _notesService.updateCloudNote(
+      await _firebaseCloudStorage.updateCloudNote(
+        documentId: note.documentId,
         title: title,
         content: content,
         importance: enumToString(importance),
-        documentId: note.documentId,
       );
     } else {
-      //Based in berlin
       await _services.updateNote(
         noteId: note.noteId,
         title: title,
@@ -126,8 +123,6 @@ class _CreateOrUpdateNoteState extends State<CreateOrUpdateNote> {
       );
     }
   }
-
-  void _setupImportanceControllerListener() {}
 
   void _setupTitleControllerListener() {
     _titleController.removeListener(() {

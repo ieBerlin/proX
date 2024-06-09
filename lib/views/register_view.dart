@@ -73,7 +73,7 @@ class _RegisterViewState extends State<RegisterView> {
                         Padding(
                           padding: const EdgeInsets.only(left: 15),
                           child: Image.asset(
-                            'assets/images/avicii.png',
+                            'assets/images/logoImage.png',
                             width: 70,
                           ),
                         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:projectx/UI/tools/constants.dart';
 import 'package:projectx/services/auth/bloc/auth_bloc.dart';
 import 'package:projectx/services/auth/bloc/auth_event.dart';
 import 'package:projectx/services/auth/bloc/auth_state.dart';
@@ -51,7 +52,7 @@ class _LoginViewState extends State<LoginView> {
         }
       },
       child: Scaffold(
-          backgroundColor: const Color(0xff354654),
+          backgroundColor: lightBlackColor(),
           body: SafeArea(
             child: Container(
               constraints: const BoxConstraints.expand(),
@@ -70,9 +71,9 @@ class _LoginViewState extends State<LoginView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(left: 15),
+                          padding: const EdgeInsets.only(left: 15,top: 10),
                           child: Image.asset(
-                            'assets/images/avicii.png',
+                            'assets/images/logoImage.png',
                             width: 70,
                           ),
                         ),
@@ -135,10 +136,10 @@ class _LoginViewState extends State<LoginView> {
                             controller: email,
                             keyboardType: TextInputType.emailAddress,
                             autocorrect: false,
-                            cursorColor: const Color(0xff00b6af),
+                            cursorColor: blue(),
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.mark_email_read),
-                              prefixIconColor: const Color(0xff00b6af),
+                              prefixIconColor: blue(),
                               hintText: 'Enter you email',
                               hintStyle:
                                   const TextStyle(color: Color(0xff354758)),
@@ -153,10 +154,9 @@ class _LoginViewState extends State<LoginView> {
                               focusedBorder: OutlineInputBorder(
                                 // Add focused border styling
                                 borderRadius: BorderRadius.circular(10.0),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                     width: 2,
-                                    color: Color(
-                                        0xff00b6af)), // Customize border color
+                                    color: blue()), // Customize border color
                               ),
                             ),
                           ),
@@ -171,13 +171,13 @@ class _LoginViewState extends State<LoginView> {
                             autocorrect: false,
                             enableSuggestions: false,
                             obscureText: isPressed,
-                            cursorColor: const Color(0xff00b6af),
+                            cursorColor: blue(),
                             decoration: InputDecoration(
                               hintText: 'Enter you password',
                               hintStyle:
                                   const TextStyle(color: Color(0xff354758)),
                               prefixIcon: const Icon(Icons.lock_clock_rounded),
-                              prefixIconColor: const Color(0xff00b6af),
+                              prefixIconColor: blue(),
                               suffixIcon: InkWell(
                                 onTap: () {
                                   setState(() {
@@ -198,10 +198,9 @@ class _LoginViewState extends State<LoginView> {
                               focusedBorder: OutlineInputBorder(
                                 // Add focused border styling
                                 borderRadius: BorderRadius.circular(10.0),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                     width: 2,
-                                    color: Color(
-                                        0xff00b6af)), // Customize border color
+                                    color: blue()), // Customize border color
                               ),
                             ),
                           ),
@@ -311,11 +310,12 @@ class _LoginViewState extends State<LoginView> {
                                       .read<AuthBloc>()
                                       .add(const AuthEventShouldRegister());
                                 },
-                                child: const Text('Create an account',
+                                child: Text('Create an account',
                                     style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xff00B4B2))))
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: blue(),
+                                    )))
                           ],
                         ),
                         const SizedBox(

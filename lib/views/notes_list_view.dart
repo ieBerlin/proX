@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:projectx/UI/tools/constants.dart';
 import 'package:projectx/UI/tools/grid_view_widget.dart';
-import 'package:projectx/services/auth/bloc/search_bloc/search_bloc.dart';
-import 'package:projectx/services/auth/bloc/search_bloc/search_state.dart';
+import 'package:projectx/search_bloc/search_bloc.dart';
+import 'package:projectx/search_bloc/search_state.dart';
 import 'package:projectx/services/cloud/cloud_note.dart';
 
 typedef NoteCallBack = void Function(CloudNote note);

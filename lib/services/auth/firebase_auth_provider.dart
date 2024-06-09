@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:projectx/services/auth/auth_provider.dart' as auth;
+import 'package:projectx/firebase_options.dart';
 import 'package:projectx/services/auth/auth_exceptions.dart';
-import 'package:projectx/services/auth/auth_provider.dart';
 import 'package:projectx/services/auth/auth_user.dart';
-import '../../firebase_options.dart';
-
-class FirebaseAuthProvider implements AuthProvider {
+typedef AuthProviderImplement = auth.AuthProvider;
+class FirebaseAuthProvider implements AuthProviderImplement {
   @override
   Future<AuthUser?> createUser(
       {required String email, required String password}) async {

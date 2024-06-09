@@ -13,7 +13,7 @@ class CloudNote {
   final String importance;
   final String documentId;
   const CloudNote({
-    this.noteId = -1,
+    required this.noteId,
     required this.userId,
     required this.title,
     required this.content,
@@ -30,7 +30,7 @@ class CloudNote {
         documentId = 'DEFAULT-NULL';
 
   CloudNote.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
-      : noteId = (snapshot.data()[noteIdFieldName] ?? -1) as int,
+      : noteId = (snapshot.data()[noteIdFieldName] ?? -1 )as int,
         userId = FirebaseAuth.instance.currentUser!.uid,
         title = snapshot.data()[titleFieldName] as String,
         content = snapshot.data()[contentFieldName] as String,
@@ -45,6 +45,6 @@ class CloudNote {
         documentId = snapshot.id;
   @override
   String toString() {
-    return 'userid : $userId, title :  $title,documentid :$documentId content : $content, importance : $importance';
+    return 'userid : $userId, title :  $title,documentid :$documentId\ncontent : $content, importance : $importance, noteid : $noteId';
   }
 }

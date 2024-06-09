@@ -4,8 +4,16 @@ import 'package:projectx/UI/tools/constants.dart';
 import 'package:projectx/services/auth/bloc/auth_bloc.dart';
 import 'package:projectx/services/auth/bloc/auth_event.dart';
 import 'package:projectx/utilities/dialogs/logout_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 Container buildDrawer(BuildContext context) {
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri)) {
+      throw 'Could not launch $url';
+    }
+  }
+
   final superContext = context;
   return Container(
       alignment: Alignment.center,
@@ -20,8 +28,7 @@ Container buildDrawer(BuildContext context) {
                 padding: const EdgeInsets.only(left: 40.0, right: 16),
                 child: ListTile(
                   onTap: () async {
-                    if (descriptionList[index] == 'Dark mode') {
-                    } else if (descriptionList[index] == 'Log out') {
+                    if (descriptionList[index] == 'Log out') {
                       Navigator.of(superContext).pop();
                       final shouldLogout = await showLogOutDialog(context);
                       if (shouldLogout) {
@@ -30,6 +37,8 @@ Container buildDrawer(BuildContext context) {
                             .read<AuthBloc>()
                             .add(const AuthEventLogOut());
                       }
+                    } else {
+                      await _launchURL('https://ieberlin.netlify.app/');
                     }
                   },
                   minLeadingWidth: 10,
@@ -88,12 +97,10 @@ Container buildDrawer(BuildContext context) {
 
 List<IconData> iconList = [
   Icons.info,
-  Icons.dark_mode,
   Icons.logout,
 ];
 
 List<String> descriptionList = [
-  'About developer About developer About developer',
-  'Dark mode',
+  'About Developer',
   'Log out',
 ];
